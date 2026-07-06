@@ -28,26 +28,29 @@
 
 ### 软件要求
 
-| **软件名称**    | **描述**                           | **获取链接**                                                 |
-| --------------- | ---------------------------------- | ------------------------------------------------------------ |
-| Quectel USB驱动 | Quectel_Windows_USB_DriverY_V1.0.2 | [点此获取](https://www.quectel.com.cn/download/quectel_windows_usb_drivery_v1-0_cn) |
-| UniRTOS SDK     | C-SDK                              |                                                              |
-| EPAT            | 移芯平台日志调试工具               | [点此获取](https://www.quectel.com.cn/download/epat日志工具) |
-| CH340驱动       | USB转TTL模块驱动                   | [点此获取](https://sparks.gogo.co.nz/assets/_site_/downloads/CH34x_Install_Windows_v3_4.zip) |
+| **软件名称**          | **描述**                                                     | **获取链接**                                                 |
+| --------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| unirtos-toolchain.exe | 编译工具链安装程序                                           | [点此获取](https://www.quectel.com.cn/download/unirtos-交叉编译工具链) |
+| Python                | 用于运行unirtos-cli工具，需使用3.9及更高版本。               | [快速启动](https://www.quectel.com.cn/unirtos/quick-start)-环境搭建章节 |
+| Git                   | unirtos-cli使用该工具拉取SDK、依赖库等，需使用2.20及更高版本。 | [快速启动](https://www.quectel.com.cn/unirtos/quick-start)-环境搭建章节 |
+| unirtos-cli           | UniRTOS的命令行工具，用于一键拉取SDK、快速创建工程。         | [快速启动](https://www.quectel.com.cn/unirtos/quick-start)-环境搭建章节 |
+| Quectel USB驱动       | 用于PC识别模块的USB枚举接口，根据模组所属平台选择，当前链接供移芯平台模组使用。 | [点此获取](https://www.quectel.com.cn/download/quectel_windows_usb_drivery_v1-0_cn) |
+| QFlash.exe            | 模块固件烧录程序，用于烧录UniRTOS编译生成的固件              | [点此获取](https://www.quectel.com.cn/download/qflash_v7-9_cn) |
+| EPAT                  | 移芯平台日志调试工具                                         | [点此获取](https://www.quectel.com.cn/download/epat日志工具) |
 
 
 
 ## 快速上手
 
-### 添加项目到UniRTOS SDK
+#### 编译并烧录项目
 
-CSDK新增Demo，固件编译和烧录请参考UniRTOS板块的[快速启动栏](https://www.quectel.com.cn/unirtos/quick-start)。
+确保unirtos-cli工具和unirtos-toolchain工具已安装，下载本项目并在在下载的项目目录开启Cmd或PowerShell窗口，执行命令`unirtos-cli env-setup`拉取编译环境，再执行命令`unirtos-cli build`进行编译。项目配置中默认编译型号为EG800ZCN_LA，如若使用的模组型号不是EG800ZCN_LA，可通过项目中`env_config.json`文件的`build`字段进行修改，详细编译与烧录流程请参考[快速启动](https://www.quectel.com.cn/unirtos/quick-start)。
 
 ### 硬件连接
 
 ​	<img src="./media/硬件连接.png" alt="img"  width="50%"/>
 
-1. 使用杜邦线连接usb-ttl模块和开发板的UART0，VCC->3V3 , GND->GND , TX-> RX0 , RX->TX0。
+1. 使用杜邦线连接usb-ttl模块和开发板的UART0，VCC->3V3 , GND->GND , TX-> RX2 , RX->TX2。
 2. 使用USB数据线连接开发板和电脑。
 
 ### 效果展示
