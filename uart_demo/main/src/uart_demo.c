@@ -1,5 +1,5 @@
 /*****************************************************************/ /**
-* @file test_demo.c
+* @file uart_demo.c
 * @brief
 * The demo demonstrates the use of UART interface, including UART port initialization, event callback registration, data transmission 
 * and reception, and communication parameter configuration.
@@ -94,9 +94,9 @@ static void unir_uart_demo_process(void *ctx)
         if (qosa_uart_read_available(UNIR_TEST_UART_PORT) > 0)
         {
             qosa_uart_read(UNIR_TEST_UART_PORT, (unsigned char *)&g_uart_data, 1024);
-            QLOGI("[TEST Demo]]recv uart data %s", g_uart_data);
+            QLOGI("[Uart Demo]recv uart data %s", g_uart_data);
             ret = qosa_uart_write(UNIR_TEST_UART_PORT, (unsigned char *)&g_uart_data, 1024);
-            QLOGI("[TEST Demo]qosa_uart_write ret = %d", ret);
+            QLOGI("[Uart Demo]qosa_uart_write ret = %d", ret);
             qosa_memset(g_uart_data, 0, sizeof(g_uart_data));
         }
     }

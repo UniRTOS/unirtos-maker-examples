@@ -1,5 +1,5 @@
 /*****************************************************************/ /**
-* @file test_demo.c
+* @file sms.c
 * @brief
 * A demo of the SMS sending function shows how to use the QOSA SMS interface to send SMS messages containing both Chinese and English characters.
 * @author lysander.li@quectel.com
@@ -15,6 +15,7 @@
 #include "qosa_system_utils.h"
 #include "qosa_at_config.h"
 #include "unirtos_app_init_registry.h"
+#include "include.h"
 
 #define QOS_LOG_TAG   LOG_TAG_DEMO
 
@@ -22,7 +23,7 @@
 
 #define UniRTOS_TEST_DEMO_TASK_PRIO QOSA_PRIORITY_NORMAL // Normal priority
 
-static qosa_task_t g_quec_test_demo_task = QOSA_NULL;
+static qosa_task_t sms_demo_task = QOSA_NULL;
 
 #define QOSA_SMS_DEMO_WAIT_ATTACH_TIMEOUT       300     /*!< Network registration timeout (seconds) */
 
@@ -160,7 +161,7 @@ static int unir_sms_demo_send_all_characters_sms(const char *phone_number, const
 
 /*
     Name: unir_sms_demo_process
-    Description: The entry function of the TEST Demo task. 1 minute interval to send a SMS message.
+    Description: The entry function of the SMS Demo task. 1 minute interval to send a SMS message.
     @param ctx: The context of the task.
 */
 static void unir_sms_demo_process(void *ctx)
@@ -187,23 +188,23 @@ static void unir_sms_demo_process(void *ctx)
 
 /*
     Name: unir_sms_demo_init
-    Description: Initialize the TEST Demo, create a task to run the demo.
+    Description: Initialize the SMS Demo, create a task to run the demo.
     @param None
 */
 void unir_sms_demo_init(void)
 {
-    // Log the entry of the TEST Demo initialization
-    QLOGV("enter TEST DEMO !!!");
+    // Log the entry of the SMS Demo initialization
+    QLOGV("enter SMS DEMO !!!");
 
-    // Create a task for the TEST Demo using qosa_task_create, with specified stack size, priority, name, and entry function
-    if (g_quec_test_demo_task == QOSA_NULL) // Check if the TEST Demo task has already been created
+    // Create a task for the SMS Demo using qosa_task_create, with specified stack size, priority, name, and entry function
+    if (sms_demo_task == QOSA_NULL) // Check if the SMS Demo task has already been created
     {       
         
         qosa_task_create(
-            &g_quec_test_demo_task,
+            &sms_demo_task,
             UniRTOS_TEST_DEMO_TASK_STACK_SIZE,     // Task stack size
             UniRTOS_TEST_DEMO_TASK_PRIO,           // Task priority
-            "test_demo",                           // Task name
+            "sms_demo",                            // Task name
             unir_sms_demo_process,                // Task entry function
             QOSA_NULL                             // Task context (not used in this case
         );

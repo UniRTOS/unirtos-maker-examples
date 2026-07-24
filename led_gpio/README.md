@@ -43,64 +43,172 @@
 
 ## 快速上手
 
-#### 编译并烧录项目
+### 1. 开发环境搭建
 
-确保unirtos-cli工具和unirtos-toolchain工具已安装，下载本项目并在在下载的项目目录开启Cmd或PowerShell窗口，执行命令`unirtos-cli env-setup`拉取编译环境，再执行命令`unirtos-cli build`进行编译。项目配置中默认编译型号为EG800ZCN_LA，如若使用的模组型号不是EG800ZCN_LA，可通过项目中`env_config.json`文件的`build`字段进行修改，详细编译与烧录流程请参考[快速启动](https://www.quectel.com.cn/unirtos/quick-start)。
+参考 [UNIRTOS 快速入门](https://docs.quectel.com/zh/UniRTOS/UniRTOS文档/快速上手/快速上手.html) 文档，了解如何搭建开发环境并完成基本开发流程。
 
-### 硬件连接
+### 2. 项目结构
+
+```text
+led_gpio/
+├── main
+  ├── inc               # 存放项目头文件
+    └── include.h       # Demo头文件
+  └── src               # 存放项目源码
+    └── led_gpio.c      # Demo源代码
+├── media               # README所需媒体文件
+├── menucongfig         # 项目配置的功能选项	
+├── CMakeLists.txt      # Demo构建脚本
+├── env_config.json     # UniRTOS工程环境配置
+└── README.md           # 本文件
+```
+
+### 3. 代码拉取
+
+新开启一个PowerShell窗口，执行以下命令：
+
+```
+# 拉取示例仓库
+unirtos-cli new -r unirtos-maker-examples
+# 进入该项目
+cd unirtos-maker-examples/led_gpio
+```
+
+### 4. 构建项目
+
+拉取编译环境
+
+```
+unirtos-cli env-setup
+```
+
+在 PowerShell 窗口执行固件编译命令（如使用模块型号非EG800ZCN_LA，请替换实际需要编译的型号）：
+
+```
+unirtos-cli build -m EG800ZCN_LA -v EG800ZCNLAR01A01_OCPU_20260626
+```
+
+等待编译结束后，PowerShell 窗口末尾会提示固件编译结果：
+
+```text
+SUCCESS: Unirtos project built successfully!
+```
+
+### 5. 硬件连接
 
 1. LED模块连接开发板对应物理引脚，V->3V3 , R/G/B->Pin19(19号引脚)。
 2. 使用USB数据线连接开发板和电脑。
 
-## 实现讲解
+### 6. 日志展示
 
-### 常量定义 ：
+固件烧录后开机启动，可在日志中看到类似输出：
 
-1. 定义线程栈大小为1024字节，即1 kb。
-2. 定义线程优先级为一般优先级。
-3. 定义线程任务句柄，初始化为空。
-4. 定义需要初始化的引脚号，*Demo*中使用19号引脚，如需其他引脚，请自行修改。
-5. 定义一个 `pin_cfg`，用于后续接收默认引脚配置，类型为`qosa_pin_cfg_t`。
-
-![img](./media/code_1.png)	
-
+```text
+[led]LED GPIO initialized successfully, pin_num: 19, gpio_num: x, level: 1
+[led]LED ON
+[led]LED OFF
+[led]LED ON
+```
 
 
-### *unir_led_init* 函数
 
-主要功能是初始化引脚对应的GPIO功能。
+## 代码概览
 
-1. 使用`qosa_memset`现将`pin_cfg`中的成员初始化为0。
-2. 使用`qosa_get_pin_default_cfg`获取引脚的默认配置，拿到引脚对应GPIO号，GPIO功能配置。
-3. 使用`qosa_set_func`设置当前引脚功能为GPIO功能，此处的GPIO功能配置值由上一步获取。
-4. 使用`qosa_gpio_init`初始化GPIO功能，配置为上拉输出模式，默认电平高电平。
+### 主要功能接口
 
-![img](./media/code_2.png)
+#### *unir_led_demo_init -* 入口与初始化函数
 
-### *unir_led_set*函数
+- **功能**: 这是整个 LED GPIO 演示功能的**入口点**。它的主要职责是创建并启动一个独立的任务（线程），让 LED 闪烁逻辑在后台运行，而不阻塞主程序。
+- 关键操作:
+  - **任务创建**: 调用`qosa_task_create`来创建一个名为 `led_gpio_demo` 的新任务。这个新任务将执行`unir_led_demo_process`函数。
+  - **任务配置**: 栈大小 1024 字节（1KB），使用普通优先级。
+- **重要性**: 这是用户需要在自己的应用初始化流程中调用的函数，以启动 LED 闪烁功能。
 
-主要功能：改变引脚的GPIO输出电平，从而实现LED的亮灭。
+```c
+void unir_led_demo_init(void)
+{
+    QLOGV("[led]enter LED GPIO DEMO !!!");
+    if (g_led_gpio_demo_task == QOSA_NULL)
+    {
+        qosa_task_create(
+            &g_led_gpio_demo_task,
+            UniRTOS_LED_DEMO_TASK_STACK_SIZE,
+            UniRTOS_LED_DEMO_TASK_PRIO,
+            "led_gpio_demo",
+            unir_led_demo_process,
+            QOSA_NULL
+        );
+    }
+}
+```
 
-![img](./media/code_3.png)
+#### *unir_led_demo_process -* LED 主处理函数
 
-### *unir_test_demo_process* 函数
+- **功能**: LED GPIO 演示的**核心逻辑**所在。它在一个无限循环中运行，负责完成 LED 的初始化和周期性闪烁控制。
+- 关键操作:
+  - **初始化 GPIO**: 调用`unir_led_init`配置引脚为 GPIO 输出模式。
+  - **循环控制 LED**:
+    1. 调用`unir_led_set(QOSA_GPIO_LEVEL_LOW)`点亮 LED。
+    2. 调用`qosa_task_sleep_ms(1000)`延时 1 秒。
+    3. 调用`unir_led_set(QOSA_GPIO_LEVEL_HIGH)`熄灭 LED。
+    4. 调用`qosa_task_sleep_ms(1000)`延时 1 秒。
+    5. 回到步骤 1，循环往复。
+- **重要性**: 这个函数封装了 GPIO 从初始化到周期性控制的完整生命周期，是理解如何操作 GPIO 的关键。
 
-主要功能：线程处理函数，主要实现LED的闪烁逻辑，每隔1s改变GPIO的输出电平。
+```c
+static void unir_led_demo_process(void *ctx)
+{
+    unir_led_init();
+    while (1)
+    {
+        unir_led_set(QOSA_GPIO_LEVEL_LOW);
+        QLOGI("[led]LED ON");
+        qosa_task_sleep_ms(1000);
+        unir_led_set(QOSA_GPIO_LEVEL_HIGH);
+        QLOGI("[led]LED OFF");
+        qosa_task_sleep_ms(1000);
+    }
+}
+```
 
-​	![img](./media/code_4.png)
+#### *unir_led_init -* GPIO 初始化函数
 
-### *unir_test_demo_init* 函数
+- **功能**: 初始化引脚对应的 GPIO 功能，配置为输出模式。
+- 关键操作:
+  - **清零配置**: 调用`qosa_memset`将`pin_cfg`成员初始化为 0。
+  - **获取默认配置**: 调用`qosa_get_pin_default_cfg`获取引脚的默认配置，得到 GPIO 号与 GPIO 功能配置值。
+  - **设置引脚功能**: 调用`qosa_pin_set_func`将当前引脚功能设置为 GPIO 功能。
+  - **初始化 GPIO**: 调用`qosa_gpio_init`初始化 GPIO，配置为上拉输出模式，默认高电平（LED 熄灭）。
+- **重要性**: 完成 GPIO 引脚的硬件初始化，是 LED 控制的前提条件。
 
-主要功能：调用函数初始化配置GPIO，创建线程执行任务。
+```c
+static qosa_uint8_t unir_led_init(void)
+{
+    qosa_memset(&pin_cfg, 0, sizeof(qosa_pin_cfg_t));
+    qosa_get_pin_default_cfg(LED_PIN_NUM, &pin_cfg);
+    qosa_pin_set_func(LED_PIN_NUM, pin_cfg.gpio_func);
+    if (qosa_gpio_init(pin_cfg.gpio_num, QOSA_GPIO_DIRECTION_OUTPUT, QOSA_GPIO_PULL_UP, QOSA_GPIO_LEVEL_HIGH) != QOSA_GPIO_SUCCESS)
+    {
+        return 1;
+    }
+    return 0;
+}
+```
 
-​	![img](./media/code_5.png)
+#### *unir_led_set -* GPIO 电平设置函数
 
-## 常见问题
+- **功能**: 改变引脚的 GPIO 输出电平，从而控制 LED 的亮灭。
+- 关键操作:
+  - **设置电平**: 调用`qosa_gpio_set_level`设置指定 GPIO 的输出电平。低电平点亮 LED，高电平熄灭 LED。
+- **重要性**: 提供简洁的电平控制接口，用户可自由控制 LED 的开关状态。
 
-### 1. LED没有任何反应？
-
-检查连线是否正确，确认GPIO配置为输出模式，引脚配置为GPIO功能。
-
-### 2. 是否可以使用其他引脚？
-
-修改开头的宏定义LED_PIN_NUM即可更换为其他引脚。
+```c
+static qosa_uint8_t unir_led_set(qosa_gpio_level_e gpio_level)
+{
+    if (qosa_gpio_set_level(pin_cfg.gpio_num, gpio_level) != QOSA_GPIO_SUCCESS)
+    {
+        return 1;
+    }
+    return 0;
+}
+```

@@ -1,5 +1,5 @@
 /*****************************************************************/ /**
-* @file test_demo.c
+* @file led_gpio.c
 * @brief
 * The demo initializes a GPIO pin connected to an LED, then toggles the LED on and off in a loop with a delay. 
 * @author lysander.li@quectel.com
@@ -14,6 +14,7 @@
 #include "qosa_def.h"
 #include "qosa_log.h"
 #include "unirtos_app_init_registry.h"
+#include "include.h"
 
 #define QOS_LOG_TAG   LOG_TAG_DEMO
 
@@ -21,7 +22,7 @@
 
 #define UniRTOS_LED_DEMO_TASK_PRIO QOSA_PRIORITY_NORMAL // Normal priority
 
-static qosa_task_t g_quec_test_demo_task = QOSA_NULL;
+static qosa_task_t g_led_gpio_demo_task = QOSA_NULL;
 
 #define LED_PIN_NUM 19
 
@@ -40,10 +41,10 @@ static qosa_uint8_t unir_led_init(void)
     // Initialize the LED GPIO pin as output, with pull-up and default level high (LED off)
     if (qosa_gpio_init(pin_cfg.gpio_num, QOSA_GPIO_DIRECTION_OUTPUT, QOSA_GPIO_PULL_UP, QOSA_GPIO_LEVEL_HIGH) != QOSA_GPIO_SUCCESS)
     {
-        QLOGD("[led]]Failed to initialize LED GPIO");
+        QLOGD("[led]Failed to initialize LED GPIO");
         return 1; // Return 1 on failure
     }
-    QLOGI("[led]]LED GPIO initialized successfully, pin_num: %d, gpio_num: %d, level: %d", LED_PIN_NUM, pin_cfg.gpio_num, QOSA_GPIO_LEVEL_HIGH);
+    QLOGI("[led]LED GPIO initialized successfully, pin_num: %d, gpio_num: %d, level: %d", LED_PIN_NUM, pin_cfg.gpio_num, QOSA_GPIO_LEVEL_HIGH);
     return 0;
 }
 
@@ -57,7 +58,7 @@ static qosa_uint8_t unir_led_set(qosa_gpio_level_e gpio_level)
 { 
     if(qosa_gpio_set_level(pin_cfg.gpio_num, gpio_level) != QOSA_GPIO_SUCCESS)
     {
-        QLOGD("[led]]Failed to set LED GPIO level");
+        QLOGD("[led]Failed to set LED GPIO level");
         return 1; // Return 1 on failure
     }
     return 0;
@@ -65,7 +66,7 @@ static qosa_uint8_t unir_led_set(qosa_gpio_level_e gpio_level)
 
 /*
     Name: unir_led_demo_process
-    Description: The main process function for the TEST Demo, which initializes the LED and toggles it on and off in a loop.
+    Description: The main process function for the LED GPIO Demo, which initializes the LED and toggles it on and off in a loop.
     @param ctx: Task context pointer, reserved for future use, currently not used
     @return None
 */
@@ -75,10 +76,10 @@ static void unir_led_demo_process(void *ctx)
     while (1)
     {
         unir_led_set(QOSA_GPIO_LEVEL_LOW);
-        QLOGI("[led]]LED ON");
+        QLOGI("[led]LED ON");
         qosa_task_sleep_ms(1000);
         unir_led_set(QOSA_GPIO_LEVEL_HIGH);
-        QLOGI("[led]]LED OFF");
+        QLOGI("[led]LED OFF");
         qosa_task_sleep_ms(1000);
     }
     
@@ -86,23 +87,23 @@ static void unir_led_demo_process(void *ctx)
 
 /*
     Name: unir_led_demo_init
-    Description: Initialize the TEST Demo, create a task to run the demo.
+    Description: Initialize the LED GPIO Demo, create a task to run the demo.
     @param None
 */
 void unir_led_demo_init(void)
 {
-    // Log the entry of the TEST Demo initialization
-    QLOGV("[led]]enter TEST DEMO !!!");
+    // Log the entry of the LED GPIO Demo initialization
+    QLOGV("[led]enter LED GPIO DEMO !!!");
 
-    // Create a task for the TEST Demo using qosa_task_create, with specified stack size, priority, name, and entry function
-    if (g_quec_test_demo_task == QOSA_NULL) // Check if the TEST Demo task has already been created
+    // Create a task for the LED GPIO Demo using qosa_task_create, with specified stack size, priority, name, and entry function
+    if (g_led_gpio_demo_task == QOSA_NULL) // Check if the LED GPIO Demo task has already been created
     {       
         
         qosa_task_create(
-            &g_quec_test_demo_task,
+            &g_led_gpio_demo_task,
             UniRTOS_LED_DEMO_TASK_STACK_SIZE,     // Task stack size
             UniRTOS_LED_DEMO_TASK_PRIO,           // Task priority
-            "test_demo",                           // Task name
+            "led_gpio_demo",                       // Task name
             unir_led_demo_process,                // Task entry function
             QOSA_NULL                             // Task context (not used in this case
         );

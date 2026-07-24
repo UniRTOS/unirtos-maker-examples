@@ -1,5 +1,5 @@
 /*****************************************************************/ /**
-* @file datacall_demo.c
+* @file datacall.c
 * @brief
 * @author david.deng@quectel.com
 * @date 2025-04-23
@@ -21,7 +21,7 @@
 #include "qosa_platform_cfg.h"
 #include "qosa_ip_addr.h"
 #include "qosa_event_notify.h"
-
+#include "include.h"
 #include "unirtos_app_init_registry.h"
 
 #define QOS_LOG_TAG    LOG_TAG_DEMO
@@ -87,7 +87,7 @@ int datacall_nw_deact_pdp_cb(void *user_argv, void *argv)
     //get nw deact report params
     qosa_datacall_nw_deact_event_t *pdp_deatch_event = (qosa_datacall_nw_deact_event_t *)argv;
 
-    QLOGI("[datacall]]enter,simid=%d,pdpid=%d", pdp_deatch_event->simid, pdp_deatch_event->pdpid);
+    QLOGI("[datacall]enter,simid=%d,pdpid=%d", pdp_deatch_event->simid, pdp_deatch_event->pdpid);
 
     // malloc memory
     deact_ptr = (datacall_demo_pdp_deact_ind_t *)qosa_malloc(sizeof(datacall_demo_pdp_deact_ind_t));
@@ -154,7 +154,7 @@ static void unir_datacall_demo_task(void *arg)
 
     // Create message queue
     ret = qosa_msgq_create(&g_datacall_demo_msgq, sizeof(datacall_demo_msg_t), 20);
-    QLOGI("[datacall]]create msgq result=%d", ret);
+    QLOGI("[datacall]create msgq result=%d", ret);
 
     qosa_task_sleep_sec(3);
 
@@ -163,7 +163,7 @@ static void unir_datacall_demo_task(void *arg)
     is_attached = qosa_datacall_wait_attached(simid, DATACALL_DEMO_WAIT_ATTACH_MAX_WAIT_TIME);
     if (!is_attached)
     {
-        QLOGI("[datacall]]attach fail");
+        QLOGI("[datacall]attach fail");
         goto exit;
     }
 
@@ -184,7 +184,7 @@ static void unir_datacall_demo_task(void *arg)
     }
 
     ret = qosa_datacall_set_pdp_context(simid, profile_idx, &pdp_ctx);
-    QLOGI("[datacall]]set pdp context, ret=%d", ret);
+    QLOGI("[datacall]set pdp context, ret=%d", ret);
 
     // Create datacall object
     conn = qosa_datacall_conn_new(simid, profile_idx, QOSA_DATACALL_CONN_TCPIP);
@@ -193,42 +193,42 @@ static void unir_datacall_demo_task(void *arg)
     ret = qosa_datacall_start(conn, DATACALL_DEMO_WAIT_DATACALL_MAX_WAIT_TIME);
     if (ret != QOSA_DATACALL_OK)
     {
-        QLOGI("[datacall]]datacall fail ,ret=%d", ret);
+        QLOGI("[datacall]datacall fail ,ret=%d", ret);
         goto exit;
     }
 
     // Get datacall status (0: deactive 1: active)
     datacall_status = qosa_datacall_get_status(conn);
-    QLOGI("datacall status=%d", datacall_status);
+    QLOGI("[datacall]datacall status=%d", datacall_status);
 
     // Get IP info from datacall
     ret = qosa_datacall_get_ip_info(conn, &info);
-    QLOGI("[datacall]]pdpid=%d,simid=%d", info.simcid.pdpid, info.simcid.simid);
-    QLOGI("[datacall]]ip_type=%d", info.ip_type);
+    QLOGI("[datacall]pdpid=%d,simid=%d", info.simcid.pdpid, info.simcid.simid);
+    QLOGI("[datacall]ip_type=%d", info.ip_type);
 
     if (info.ip_type == QOSA_PDP_IPV4)
     {
         // IPv4 info
         qosa_memset(ip4addr_buf, 0, sizeof(ip4addr_buf));
         qosa_ip_addr_inet_ntop(QOSA_IP_ADDR_AF_INET, &info.ipv4_ip.addr.ipv4_addr, ip4addr_buf, sizeof(ip4addr_buf));
-        QLOGI("[datacall]]ipv4 addr:%s", ip4addr_buf);
+        QLOGI("[datacall]ipv4 addr:%s", ip4addr_buf);
     }
     else if (info.ip_type == QOSA_PDP_IPV6)
     {
         // IPv6 info
         qosa_memset(ip6addr_buf, 0, sizeof(ip6addr_buf));
         qosa_ip_addr_inet_ntop(QOSA_IP_ADDR_AF_INET6, &info.ipv6_ip.addr.ipv6_addr, ip6addr_buf, sizeof(ip6addr_buf));
-        QLOGI("[datacall]]ipv6 addr:%s", ip6addr_buf);
+        QLOGI("[datacall]ipv6 addr:%s", ip6addr_buf);
     }
     else
     {
         // IPv4 and IPv6 info
         qosa_memset(ip4addr_buf, 0, sizeof(ip4addr_buf));
         qosa_ip_addr_inet_ntop(QOSA_IP_ADDR_AF_INET, &info.ipv4_ip.addr.ipv4_addr, ip4addr_buf, sizeof(ip4addr_buf));
-        QLOGI("[datacall]]ipv4 addr:%s", ip4addr_buf);
+        QLOGI("[datacall]ipv4 addr:%s", ip4addr_buf);
         qosa_memset(ip6addr_buf, 0, sizeof(ip6addr_buf));
         qosa_ip_addr_inet_ntop(QOSA_IP_ADDR_AF_INET6, &info.ipv6_ip.addr.ipv6_addr, ip6addr_buf, sizeof(ip6addr_buf));
-        QLOGI("[datacall]]ipv6 addr:%s", ip6addr_buf);
+        QLOGI("[datacall]ipv6 addr:%s", ip6addr_buf);
     }
 
     while (1)
@@ -236,19 +236,19 @@ static void unir_datacall_demo_task(void *arg)
         ret = qosa_msgq_wait(g_datacall_demo_msgq, (qosa_uint8_t *)&datacall_task_msg, sizeof(datacall_demo_msg_t), QOSA_WAIT_FOREVER);
         if (ret != 0)
             continue;
-        QLOGI("[datacall]]enter datacall demo task, msgid=%d", datacall_task_msg.msgid);
+        QLOGI("[datacall]enter datacall demo task, msgid=%d", datacall_task_msg.msgid);
 
         switch (datacall_task_msg.msgid)
         {
             case DATACALL_NW_DEACT_MSG: {
                 datacall_demo_pdp_deact_ind_t *deact_ptr = (datacall_demo_pdp_deact_ind_t *)datacall_task_msg.argv;
-                QLOGI("[datacall]]simid=%d,deact pdpid=%d", deact_ptr->simid, deact_ptr->pdpid);
+                QLOGI("[datacall]simid=%d,deact pdpid=%d", deact_ptr->simid, deact_ptr->pdpid);
 
                 // Try reactive 10 times, time interval is 20 seconds
                 while (((ret = qosa_datacall_start(conn, DATACALL_DEMO_WAIT_DATACALL_MAX_WAIT_TIME)) != QOSA_DATACALL_OK) && (retry_count < 10))
                 {
                     retry_count++;
-                    QLOGI("[datacall]]datacall fail, the retry count is %d", retry_count);
+                    QLOGI("[datacall]datacall fail, the retry count is %d", retry_count);
                     qosa_task_sleep_sec(20);
                 }
 
@@ -258,11 +258,11 @@ static void unir_datacall_demo_task(void *arg)
 
                     // Get datacall status (0: deactive 1: active)
                     datacall_status = qosa_datacall_get_status(conn);
-                    QLOGI("[datacall]]datacall status=%d", datacall_status);
+                    QLOGI("[datacall]datacall status=%d", datacall_status);
                     // Get IP info from datacall
                     ret = qosa_datacall_get_ip_info(conn, &info);
-                    QLOGI("[datacall]]pdpid=%d,simid=%d", info.simcid.pdpid, info.simcid.simid);
-                    QLOGI("[datacall]]ip type=%d", info.ip_type);
+                    QLOGI("[datacall]pdpid=%d,simid=%d", info.simcid.pdpid, info.simcid.simid);
+                    QLOGI("[datacall]ip type=%d", info.ip_type);
                     char ip4addr_buf[CONFIG_QOSA_INET_ADDRSTRLEN] = {0};
                     char ip6addr_buf[CONFIG_QOSA_INET6_ADDRSTRLEN] = {0};
 
@@ -270,27 +270,27 @@ static void unir_datacall_demo_task(void *arg)
                     {
                         qosa_memset(ip4addr_buf, 0, sizeof(ip4addr_buf));
                         qosa_ip_addr_inet_ntop(QOSA_IP_ADDR_AF_INET, &info.ipv4_ip.addr.ipv4_addr, ip4addr_buf, sizeof(ip4addr_buf));
-                        QLOGI("[datacall]]ipv4 addr:%s", ip4addr_buf);
+                        QLOGI("[datacall]ipv4 addr:%s", ip4addr_buf);
                     }
                     else if (info.ip_type == QOSA_PDP_IPV6)
                     {
                         qosa_memset(ip6addr_buf, 0, sizeof(ip6addr_buf));
                         qosa_ip_addr_inet_ntop(QOSA_IP_ADDR_AF_INET6, &info.ipv6_ip.addr.ipv6_addr, ip6addr_buf, sizeof(ip6addr_buf));
-                        QLOGI("[datacall]]ipv6 addr:%s", ip6addr_buf);
+                        QLOGI("[datacall]ipv6 addr:%s", ip6addr_buf);
                     }
                     else
                     {
                         qosa_memset(ip4addr_buf, 0, sizeof(ip4addr_buf));
                         qosa_ip_addr_inet_ntop(QOSA_IP_ADDR_AF_INET, &info.ipv4_ip.addr.ipv4_addr, ip4addr_buf, sizeof(ip4addr_buf));
-                        QLOGI("[datacall]]ipv4 addr:%s", ip4addr_buf);
+                        QLOGI("[datacall]ipv4 addr:%s", ip4addr_buf);
                         qosa_memset(ip6addr_buf, 0, sizeof(ip6addr_buf));
                         qosa_ip_addr_inet_ntop(QOSA_IP_ADDR_AF_INET6, &info.ipv6_ip.addr.ipv6_addr, ip6addr_buf, sizeof(ip6addr_buf));
-                        QLOGI("[datacall]]ipv6 addr:%s", ip6addr_buf);
+                        QLOGI("[datacall]ipv6 addr:%s", ip6addr_buf);
                     }
                 }
                 else
                 {
-                    QLOGI("[datacall]]datacall fail in nw deact pdn event");
+                    QLOGI("[datacall]datacall fail in nw deact pdn event");
                 }
                 qosa_free(datacall_task_msg.argv);
             }
@@ -324,9 +324,9 @@ void unir_datacall_demo_init(void)
     err = qosa_task_create(&g_datacall_demo_task, 4 * 1024, QOSA_PRIORITY_NORMAL, "QDATACALLDEMO", unir_datacall_demo_task, QOSA_NULL);
     if (err != QOSA_OK)
     {
-        QLOGD("[datacall]]datacall_demo task create error");
+        QLOGD("[datacall]datacall_demo task create error");
         return;
     }
 }
 
-UNIRTOS_APP_EXPORT(700, "unir_datacall_test_demo", unir_datacall_demo_init);
+UNIRTOS_APP_EXPORT(700, "unir_datacall_demo", unir_datacall_demo_init);

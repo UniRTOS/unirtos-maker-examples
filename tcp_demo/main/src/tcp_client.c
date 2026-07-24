@@ -1,5 +1,5 @@
 /*****************************************************************/ /**
-* @file socket_block_demo.c
+* @file tcp_client.c
 * @brief
 * @author harry.li@quectel.com
 * @date 2025-05-7
@@ -17,7 +17,7 @@
 #include "qosa_sys.h"
 #include "qosa_log.h"
 #include "qosa_asyn_dns.h"
-
+#include "include.h"
 #include "qosa_datacall.h"
 #include "unirtos_app_init_registry.h"
 

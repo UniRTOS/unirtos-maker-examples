@@ -37,21 +37,67 @@
 | QFlash.exe            | 模块固件烧录程序，用于烧录UniRTOS编译生成的固件              | [点此获取](https://www.quectel.com.cn/download/qflash_v7-9_cn) |
 | EPAT                  | 移芯平台日志调试工具                                         | [点此获取](https://www.quectel.com.cn/download/epat日志工具) |
 
-
-
 ## 快速上手
 
-#### 编译并烧录项目
+### 1. 开发环境搭建
 
-确保unirtos-cli工具和unirtos-toolchain工具已安装，下载本项目并在在下载的项目目录开启Cmd或PowerShell窗口，执行命令`unirtos-cli env-setup`拉取编译环境，再执行命令`unirtos-cli build`进行编译。项目配置中默认编译型号为EG800ZCN_LA，如若使用的模组型号不是EG800ZCN_LA，可通过项目中`env_config.json`文件的`build`字段进行修改，详细编译与烧录流程请参考[快速启动](https://www.quectel.com.cn/unirtos/quick-start)。
+参考 [UNIRTOS 快速入门](https://docs.quectel.com/zh/UniRTOS/UniRTOS文档/快速上手/快速上手.html) 文档，了解如何搭建开发环境并完成基本开发流程。
 
-### 硬件连接
+### 2. 项目结构
 
-使用USB数据线连接开发板和电脑即可。
+```text
+boot_reason/
+├── main
+  ├── inc               # 存放项目头文件
+    └── include.h       # Demo头文件
+  └── src               # 存放项目源码
+    └── boot_reason.c   # Demo源代码
+├── media               # README所需媒体文件
+├── menucongfig         # 项目配置的功能选项	
+├── CMakeLists.txt      # Demo构建脚本
+├── env_config.json     # UniRTOS工程环境配置
+└── README.md           # 本文件
+```
 
-### 日志展示
+### 3. 代码拉取
 
-![img](https://fat.quectel.com.cn/wp-content/uploads/2026/04/LOG.png)
+新开一个PowerShell窗口，执行以下命令：
+
+```
+# 拉取示例仓库
+unirtos-cli new -r unirtos-maker-examples
+# 进入该项目
+cd unirtos-maker-examples/boot_reason
+```
+
+### 4. 构建项目
+
+拉取编译环境
+
+```
+unirtos-cli env-setup
+```
+
+在 PowerShell 窗口执行固件编译命令（如使用模块型号非EG800ZCN_LA，请替换实际需要编译的型号）：
+
+```
+unirtos-cli build -m EG800ZCN_LA -v EG800ZCNLAR01A01_OCPU_20260626
+```
+
+等待编译结束后，PowerShell 窗口末尾会提示固件编译结果：
+
+```text
+SUCCESS: Unirtos project built successfully!
+```
+
+### 5. 日志展示
+
+固件烧录后开机启动，可在日志中看到类似输出：
+
+```text
+[boot_reason]Enter UniRTOS Power DEMO!
+[boot_reason]Boot from power key
+```
 
 
 
@@ -59,12 +105,31 @@
 
 ### 主要功能接口
 
-#### *unir_test_demo_init -* 入口与初始化函数
+#### *unir_pwrkey_demo_init -* 入口与初始化函数
 
 - **功能**: 这是整个 UART 演示功能的**入口点**。它的主要职责是创建并启动一个独立的任务（线程），让具体逻辑在后台运行，而不阻塞主程序。
 - 关键操作:
   - **任务创建**: 调用`qosa_task_create`来创建一个名为 `uart_demo` 的新任务。这个新任务将执行`unir_pwrkey_demo_boot_cause`函数。
 - **重要性**: 这是用户需要在自己的应用初始化流程中调用的函数，以启动 UART 功能。
+
+```c
+void unir_pwrkey_demo_init(void)
+{
+    QLOGV("[boot_reason]Enter UniRTOS Power DEMO!");
+    
+    // Create a power management demo task
+    if (g_unir_pwrkey_demo_task == QOSA_NULL)
+    {
+         qosa_task_create(&g_unir_pwrkey_demo_task, 
+                    4096, 
+                    QOSA_PRIORITY_NORMAL, 
+                    "power_demo", 
+                    unir_pwrkey_demo_process, 
+                    QOSA_NULL);
+    }
+   
+}
+```
 
 #### *unir_pwrkey_demo_boot_cause* -获取开机原因并输出日志
 
@@ -74,8 +139,50 @@
   - 获取原因：调用`qosa_power_get_boot_cause`，得到开机原因返回值
   - 日志打印：根据返回值，选择对应的结果，输出日志
 
+```c
+static void unir_pwrkey_demo_boot_cause(void)
+{
+    qosa_power_error_e ret;
+    qosa_boot_cause_e boot_cause;
+
+    // Get the boot reason
+    ret = qosa_power_get_boot_cause(&boot_cause);
+    if (ret == QOSA_POWER_SUCCESS)
+    {
+        switch (boot_cause)
+        {
+            case QOSA_BOOT_CAUSE_PSM_WAKE:
+                QLOGV("[boot_reason]Boot from PSM wake");
+                break;
+            case QOSA_BOOT_CAUSE_PWRKEY:
+                QLOGV("[boot_reason]Boot from power key");
+                break;
+            case QOSA_BOOT_CAUSE_RESET:
+                QLOGV("[boot_reason]Boot from reset key");
+                break;
+            case QOSA_BOOT_CAUSE_WDG:
+                QLOGV("[boot_reason]Boot from watchdog reset");
+                break;
+            case QOSA_BOOT_CAUSE_PANIC:
+                QLOGV("[boot_reason]Boot from panic reset");
+                break;
+            case QOSA_BOOT_CAUSE_SWRESET:
+                QLOGV("[boot_reason]Boot from software reset");
+                break;
+            default:
+                QLOGV("[boot_reason]Boot from unknown cause");
+                break;          
+        }
+    }
+    else
+    {
+        QLOGE("[boot_reason]Get boot cause failed, ret: %d", ret);
+    }
+}                
+```
+
 ## 常见问题
 
 ### 程序一直在自己重启？
 
-这是由于`unir_pwrkey_demo_process`中的自动重启函数导致的。请根据测试需求自行选择是否使用，如无需使用，请将其注释掉。
+由于`unir_pwrkey_demo_process`中存在自动重启函数导致的。请根据测试需求自行选择是否使用，如无需使用，请将其注释掉。

@@ -1,5 +1,5 @@
 /*****************************************************************/ /**
-* @file test_demo.c
+* @file mutex.c
 * @author lysander.li@quectel.com
 * @date 2026-03-31
 * @brief This file contains the implementation of a mutex demonstration using UniRTOS.
@@ -7,6 +7,7 @@
 #include "qosa_sys.h"
 #include "qosa_log.h"
 #include "unirtos_app_init_registry.h"
+#include "include.h"
 
 #define QOS_LOG_TAG LOG_TAG_DEMO
 static qosa_task_t          UNIRTOS_TEST_TASK_A = QOSA_NULL, UNIRTOS_TEST_TASK_B = QOSA_NULL;

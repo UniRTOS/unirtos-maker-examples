@@ -15,7 +15,7 @@
 **********************************************************************/
 #include "qosa_power.h"
 #include "qosa_log.h"
-
+#include "include.h"
 #include "unirtos_app_init_registry.h"
 
 #define QOS_LOG_TAG LOG_TAG_DEMO
@@ -35,14 +35,14 @@ static qosa_task_t          g_unir_pwrkey_demo_task = QOSA_NULL;
  */
 static void pwrkey_demo_callback(qosa_uint8_t pinlevel)
 {
-    QLOGV("[boot_reason]]pwrkey level: %d",pinlevel);
+    QLOGV("[boot_reason]pwrkey level: %d",pinlevel);
 }
 
 /**
  * @brief Handle boot cause detection and logging
  * @return No return value
  */
-void unir_pwrkey_demo_boot_cause(void)
+static void unir_pwrkey_demo_boot_cause(void)
 {
     qosa_power_error_e ret;
     qosa_boot_cause_e boot_cause;
@@ -54,76 +54,76 @@ void unir_pwrkey_demo_boot_cause(void)
         switch (boot_cause)
         {
             case QOSA_BOOT_CAUSE_PSM_WAKE:
-                QLOGV("[boot_reason]]Boot from PSM wake");
+                QLOGV("[boot_reason]Boot from PSM wake");
                 break;
             case QOSA_BOOT_CAUSE_PWRKEY:
-                QLOGV("[boot_reason]]Boot from power key");
+                QLOGV("[boot_reason]Boot from power key");
                 break;
             case QOSA_BOOT_CAUSE_RESET:
-                QLOGV("[boot_reason]]Boot from reset key");
+                QLOGV("[boot_reason]Boot from reset key");
                 break;
             case QOSA_BOOT_CAUSE_WDG:
-                QLOGV("[boot_reason]]Boot from watchdog reset");
+                QLOGV("[boot_reason]Boot from watchdog reset");
                 break;
             case QOSA_BOOT_CAUSE_PANIC:
-                QLOGV("[boot_reason]]Boot from panic reset");
+                QLOGV("[boot_reason]Boot from panic reset");
                 break;
             case QOSA_BOOT_CAUSE_SWRESET:
-                QLOGV("[boot_reason]]Boot from software reset");
+                QLOGV("[boot_reason]Boot from software reset");
                 break;
             default:
-                QLOGV("[boot_reason]]Boot from unknown cause");
+                QLOGV("[boot_reason]Boot from unknown cause");
                 break;
         }
     }
     else
     {
-        QLOGE("[boot_reason]]Get boot cause failed, ret: %d", ret);
+        QLOGE("[boot_reason]Get boot cause failed, ret: %d", ret);
     }
 }
 
 /**
  * @brief Handle device reset functionality
  */
-void unir_pwrkey_demo_device_reset(void)
+static void unir_pwrkey_demo_device_reset(void)
 {
     qosa_power_error_e ret;
     
-    QLOGV("[boot_reason]]Will reset device after 3 seconds...");
+    QLOGV("[boot_reason]Will reset device after 3 seconds...");
     qosa_task_sleep_sec(3);
     ret = qosa_power_reset(QOSA_RESET_NORMAL);
     if (ret != QOSA_POWER_SUCCESS)
     {
-        QLOGE("[boot_reason]]Reset failed, ret: %d", ret);
+        QLOGE("[boot_reason]Reset failed, ret: %d", ret);
     }
 }
 
 /**
  * @brief Handle normal device power down
  */
-void unir_pwrkey_demo_power_down(void)
+static void unir_pwrkey_demo_power_down(void)
 {
     qosa_power_error_e ret;
     
-    QLOGV("[boot_reason]]Will power down device after 3 seconds...");
+    QLOGV("[boot_reason]Will power down device after 3 seconds...");
     qosa_task_sleep_sec(3);
     ret = qosa_power_down(QOSA_POWD_NORMAL);
     if (ret != QOSA_POWER_SUCCESS)
     {
-        QLOGE("[boot_reason]]Power down failed, ret: %d", ret);
+        QLOGE("[boot_reason]Power down failed, ret: %d", ret);
     }
 }
 
 /**
  * @brief Handle power down via callback function
  */
-void unir_pwrkey_demo_callback_power_down(void)
+static void unir_pwrkey_demo_callback_power_down(void)
 {
     // Register a pwrkey callback function
     qosa_pwrkey_callback_register(pwrkey_demo_callback);
 
     // Use a shutdown callback function to manually shut down the device.
-    QLOGV("[boot_reason]]Will power down device via button callback function...");
+    QLOGV("[boot_reason]Will power down device via button callback function...");
     qosa_task_sleep_sec(3);
 }
 
@@ -154,7 +154,7 @@ static void unir_pwrkey_demo_process(void *ctx)
  */
 void unir_pwrkey_demo_init(void)
 {
-    QLOGV("[boot_reason]]Enter UniRTOS Power DEMO!");
+    QLOGV("[boot_reason]Enter UniRTOS Power DEMO!");
     
     // Create a power management demo task
     if (g_unir_pwrkey_demo_task == QOSA_NULL)

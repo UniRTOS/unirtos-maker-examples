@@ -40,66 +40,178 @@
 
 ## 快速上手
 
-#### 编译并烧录项目
+### 1. 开发环境搭建
 
-确保unirtos-cli工具和unirtos-toolchain工具已安装，下载本项目并在在下载的项目目录开启Cmd或PowerShell窗口，执行命令`unirtos-cli env-setup`拉取编译环境，再执行命令`unirtos-cli build`进行编译。项目配置中默认编译型号为EG800ZCN_LA，如若使用的模组型号不是EG800ZCN_LA，可通过项目中`env_config.json`文件的`build`字段进行修改，详细编译与烧录流程请参考[快速启动](https://www.quectel.com.cn/unirtos/quick-start)。
+参考 [UNIRTOS 快速入门](https://docs.quectel.com/zh/UniRTOS/UniRTOS文档/快速上手/快速上手.html) 文档，了解如何搭建开发环境并完成基本开发流程。
 
-#### 硬件连接
+### 2. 项目结构
+
+```text
+datacall/
+├── main
+  ├── inc               # 存放项目头文件
+    └── include.h       # Demo头文件
+  └── src               # 存放项目源码
+    └── datacall.c      # Demo源代码
+├── media               # README所需媒体文件
+├── menucongfig         # 项目配置的功能选项	
+├── CMakeLists.txt      # Demo构建脚本
+├── env_config.json     # UniRTOS工程环境配置
+└── README.md           # 本文件
+```
+
+### 3. 代码拉取
+
+新开一个PowerShell窗口，执行以下命令：
+
+```
+# 拉取示例仓库
+unirtos-cli new -r unirtos-maker-examples
+# 进入该项目
+cd unirtos-maker-examples/datacall
+```
+
+### 4. 构建项目
+
+拉取编译环境
+
+```
+unirtos-cli env-setup
+```
+
+在 PowerShell 窗口执行固件编译命令（如使用模块型号非EG800ZCN_LA，请替换实际需要编译的型号）：
+
+```
+unirtos-cli build -m EG800ZCN_LA -v EG800ZCNLAR01A01_OCPU_20260626
+```
+
+等待编译结束后，PowerShell 窗口末尾会提示固件编译结果：
+
+```text
+SUCCESS: Unirtos project built successfully!
+```
+
+### 5. 硬件连接
 
 ​	<img src="./media/connect.png" width="50%">
 
 1. 按卡槽丝印提示方向拨开卡槽盖，将SIM卡放入，再扣好盖子
 2. 使用数据线连接开发板和电脑
 
-#### 日志展示
+### 6. 日志展示
 
-​	<img src="./media/Log.png" width="70%">
+固件烧录后开机启动，可在日志中看到类似输出：
 
-### 代码概览
+```
+[datacall]create msgq result=0
+[datacall]set pdp context, ret=0
+[datacall]pdpid=24,simid=128
+```
 
-#### 示例流程图
+## 代码概览
 
-​	<img src="./media/datacall流程图.png" width="20%">
+### 主要功能接口
 
-#### 主要功能接口
+#### *unir_datacall_demo_init -* 入口与初始化函数
 
-##### unir_test_demo_init
+- **功能**: 这是整个DataCall拨号演示功能的**入口点**。它的主要职责是创建并启动一个独立的任务（线程），让联网拨号逻辑在后台运行，而不阻塞主程序。
+- 关键操作:
+  - **任务创建**: 调用`qosa_task_create`来创建一个名为`QDATACALLDEMO`的新任务。这个新任务将执行`unir_datacall_demo_task`函数。
+  - **任务配置**: 栈大小 4KB，使用普通优先级，保证联网流程稳定运行。
+- **重要性**: 这是用户需要在自己的应用初始化流程中调用的函数，以启动DataCall自动拨号、联网、重连全套功能。
 
-**功能**：DataCall 拨号演示功能的入口与初始化函数。主要职责是创建并启动独立任务，让联网拨号逻辑在后台运行，不阻塞主程序。
-**关键操作**：
+```c
+void unir_datacall_demo_init(void)
+{
+    int err = 0;
+    err = qosa_task_create(&g_datacall_demo_task, 4 * 1024, QOSA_PRIORITY_NORMAL, "QDATACALLDEMO", unir_datacall_demo_task, QOSA_NULL);
+    if (err != QOSA_OK)
+    {
+        QLOGD("[datacall]datacall_demo task create error");
+        return;
+    }
+}
+```
 
-- 任务创建：调用 **`qosa_task_create`** 创建名为QDATACALLDEMO的任务，执行`datacall_demo_task`函数。
-- 任务配置：栈大小 4KB，使用普通优先级，保证联网流程稳定运行。
-- **重要性**：用户需在应用初始化流程中调用，以启动 DataCall 自动拨号、联网、重连全套功能。
+#### *unir_datacall_demo_task -* DataCall主处理函数
 
-##### datacall_demo_task
+- **功能**: DataCall演示的核心逻辑所在。在独立任务中完成网络附着、PDP 配置、拨号建立、IP 获取、掉线自动重连的全生命周期逻辑。
+- 关键操作:
+  - **消息队列创建**: 调用`qosa_msgq_create`创建消息队列，用于接收网络事件，实现异步事件处理。
+  - **网络附着等待**: 调用`qosa_datacall_wait_attached`等待注网成功，超时 300 秒。
+  - **事件回调注册**: 调用`qosa_event_notify_register`注册**PDN 断开**与**PDP 状态变化**回调，监听网络状态。
+  - **PDP 上下文配置**: 设置 APN（如 `3gnet`）、IP 类型（IPv4），调用`qosa_datacall_set_pdp_context`。
+  - **创建并启动拨号**: `qosa_datacall_conn_new` 创建连接对象，`qosa_datacall_start` 执行同步拨号。
+  - **获取并打印 IP 信息**: 调用`qosa_datacall_get_ip_info`获取 IP，通过`qosa_ip_addr_inet_ntop`解析 IPv4/IPv6 地址并输出日志。
+  - **无限循环监听事件**: 调用`qosa_msgq_wait`等待消息队列，处理`DATACALL_NW_DEACT_MSG` 事件并自动重拨。
+  - **掉线重连机制**: 最多重试 10 次，每次间隔 20 秒，重连成功后重新获取 IP。
+- **重要性**: 完整封装蜂窝数据拨号从上线到异常恢复的全套流程，是物联网设备联网的核心参考。
 
-**功能**：DataCall 演示核心主处理函数。在独立任务中完成网络附着、PDP 配置、拨号建立、IP 获取、掉线自动重连的全生命周期逻辑。
-**关键操作**：
+```c
+static void unir_datacall_demo_task(void *arg)
+{
+    // ... 变量声明省略 ...
+    
+    // 1. 创建消息队列
+    ret = qosa_msgq_create(&g_datacall_demo_msgq, sizeof(datacall_demo_msg_t), 20);
+    
+    // 2. 等待网络附着（超时 300 秒）
+    is_attached = qosa_datacall_wait_attached(simid, DATACALL_DEMO_WAIT_ATTACH_MAX_WAIT_TIME);
+    if (!is_attached) { goto exit; }
 
-- 消息队列创建：用于接收网络事件，实现异步事件处理。
-- 网络附着等待：调用`qosa_datacall_wait_attached`等待注网成功，超时 300 秒。
-- 事件回调注册：注册 **PDN 断开**与 **PDP 状态变化**回调，监听网络状态。
-- PDP 上下文配置：设置 APN、IP 类型（IPv4/IPv6），调用`qosa_datacall_set_pdp_context`。
-- 创建并启动拨号：`qosa_datacall_conn_new` 创建连接，qosa_datacall_start执行同步拨号。
-- 获取并打印 IP 信息：支持 IPv4/IPv6 地址解析与日志输出。
-- 无限循环监听事件：等待消息队列，处理PDP断开事件并自动重拨。
-- 掉线重连机制：最多重试 10 次，每次间隔 20 秒，重连成功后重新获取 IP。
-- **重要性**：完整封装蜂窝数据拨号从上线到异常恢复的全套流程，是物联网设备联网的核心逻辑。
+    // 3. 注册 PDN 断开和 PDP 状态变化回调
+    qosa_event_notify_register(QOSA_EVENT_NW_PDN_DEACT, datacall_nw_deact_pdp_cb, QOSA_NULL);
+    qosa_event_notify_register(QOSA_EVENT_NET_PDP_ACT, datacall_pdp_change_cb, QOSA_NULL);
 
-##### datacall_nw_deact_pdp_cb
+    // 4. 配置 PDP 上下文（APN = "3gnet", IPv4）
+    pdp_ctx.apn_valid = QOSA_TRUE;
+    pdp_ctx.pdp_type = QOSA_PDP_TYPE_IP;
+    qosa_datacall_set_pdp_context(simid, profile_idx, &pdp_ctx);
 
-**功能**：PDN 网络去激活（掉线）事件回调函数。当网络 / 基站主动断开 PDP 时被系统自动调用。
-**关键操作**：
+    // 5. 创建 DataCall 连接并同步拨号
+    conn = qosa_datacall_conn_new(simid, profile_idx, QOSA_DATACALL_CONN_TCPIP);
+    ret = qosa_datacall_start(conn, DATACALL_DEMO_WAIT_DATACALL_MAX_WAIT_TIME);
+    
+    // 6. 获取并打印 IP 地址
+    qosa_datacall_get_ip_info(conn, &info);
+    qosa_ip_addr_inet_ntop(QOSA_IP_ADDR_AF_INET, &info.ipv4_ip.addr.ipv4_addr, ip4addr_buf, ...);
 
-- 获取掉线信息：解析 simid,pdpid。
-- 封装事件消息：通过消息队列发给主任务，触发重连流程。
-- **重要性**：实现**掉线感知**，是自动重连机制的触发入口。
+    // 7. 事件主循环：等待 PDN 断开消息，触发自动重连（最多 10 次，间隔 20 秒）
+    while (1) {
+        qosa_msgq_wait(g_datacall_demo_msgq, ...);
+        // ... 重连逻辑 ...
+    }
+exit:
+    // 清理：注销回调，删除消息队列
+    qosa_event_notify_unregister(...);
+    qosa_msgq_delete(g_datacall_demo_msgq);
+}
+```
 
-##### datacall_pdp_change_cb
+#### *datacall_nw_deact_pdp_cb -* PDN网络去激活回调
 
-**功能**：PDP 拨号状态变化回调函数。用于监听拨号激活 / 去激活状态上报。
-**关键操作**：
+- **功能**: PDN 网络去激活（掉线）事件回调函数。当网络/基站主动断开 PDP 时被系统自动调用。
+- 关键操作:
+  - **获取掉线信息**: 从`qosa_datacall_nw_deact_event_t`中解析 simid、pdpid。
+  - **封装事件消息**: 通过`qosa_msgq_release`将`DATACALL_NW_DEACT_MSG`消息发送给主任务，触发重连流程。
+- **重要性**: 实现**掉线感知**，是自动重连机制的触发入口。
 
-- 接收 PDP 状态事件，可扩展用于状态监控、日志记录、上层通知等。
-- **重要性**：用于实时监控拨号链路状态，便于调试与业务联动。
+```c
+int datacall_nw_deact_pdp_cb(void *user_argv, void *argv)
+{
+    qosa_datacall_nw_deact_event_t *pdp_deatch_event = (qosa_datacall_nw_deact_event_t *)argv;
+    QLOGI("[datacall]enter,simid=%d,pdpid=%d", pdp_deatch_event->simid, pdp_deatch_event->pdpid);
+
+    // 分配内存保存掉线信息
+    datacall_demo_pdp_deact_ind_t *deact_ptr = qosa_malloc(sizeof(datacall_demo_pdp_deact_ind_t));
+    deact_ptr->simid = pdp_deatch_event->simid;
+    deact_ptr->pdpid = pdp_deatch_event->pdpid;
+
+    // 封装消息并通过消息队列发给主任务
+    datacall_demo_msg_t datacall_nw_deact_msg = {0};
+    datacall_nw_deact_msg.msgid = DATACALL_NW_DEACT_MSG;
+    datacall_nw_deact_msg.argv = deact_ptr;
+    qosa_msgq_release(g_datacall_demo_msgq, sizeof(datacall_demo_msg_t), (qosa_uint8_t *)&datacall_nw_deact_msg, QOSA_NO_WAIT);
+    return 0;
+}
+```

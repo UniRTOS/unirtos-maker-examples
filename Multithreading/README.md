@@ -41,45 +41,141 @@
 
 ## 快速上手
 
-#### 编译并烧录项目
+### 1. 开发环境搭建
 
-确保unirtos-cli工具和unirtos-toolchain工具已安装，下载本项目并在在下载的项目目录开启Cmd或PowerShell窗口，执行命令`unirtos-cli env-setup`拉取编译环境，再执行命令`unirtos-cli build`进行编译。项目配置中默认编译型号为EG800ZCN_LA，如若使用的模组型号不是EG800ZCN_LA，可通过项目中`env_config.json`文件的`build`字段进行修改，详细编译与烧录流程请参考[快速启动](https://www.quectel.com.cn/unirtos/quick-start)。
+参考 [UNIRTOS 快速入门](https://docs.quectel.com/zh/UniRTOS/UniRTOS文档/快速上手/快速上手.html) 文档，了解如何搭建开发环境并完成基本开发流程。
 
-### 硬件连接
+### 2. 项目结构
+
+```text
+Multithreading/
+├── main
+  ├── inc               # 存放项目头文件
+    └── include.h       # Demo头文件
+  └── src               # 存放项目源码
+    └── thread.c        # Demo源代码
+├── media               # README所需媒体文件
+├── menucongfig         # 项目配置的功能选项	
+├── CMakeLists.txt      # Demo构建脚本
+├── env_config.json     # UniRTOS工程环境配置
+└── README.md           # 本文件
+```
+
+### 3. 代码拉取
+
+新开启一个PowerShell窗口，执行以下命令：
+
+```
+# 拉取示例仓库
+unirtos-cli new -r unirtos-maker-examples
+# 进入该项目
+cd unirtos-maker-examples/Multithreading
+```
+
+### 4. 构建项目
+
+拉取编译环境
+
+```
+unirtos-cli env-setup
+```
+
+在 PowerShell 窗口执行固件编译命令（如使用模块型号非EG800ZCN_LA，请替换实际需要编译的型号）：
+
+```
+unirtos-cli build -m EG800ZCN_LA -v EG800ZCNLAR01A01_OCPU_20260626
+```
+
+等待编译结束后，PowerShell 窗口末尾会提示固件编译结果：
+
+```text
+SUCCESS: Unirtos project built successfully!
+```
+
+### 5. 硬件连接
 
 使用USB数据线连接开发板和电脑即可。
 
-### 效果展示
+### 6. 日志展示
 
-可查看media目录下的.mp4格式视频查看实际效果。
+固件烧录后开机启动，可在日志中看到类似输出：
+
+```text
+[Thread Demo][TASK A] TASK A is running... 
+[Thread Demo][TASK B] TASK B is running... 
+[Thread Demo][TASK A] TASK A is running... 
+[Thread Demo][TASK B] TASK B is running... 
+[Thread Demo] Task A deleted successfully
+[Thread Demo] Task B deleted successfully
+```
 
 
 
 ## 代码概览
 
-### 示例工作流程
-
-​	<img src="./media/Thread流程图.png" width="30%">
-
 ### 主要功能接口
 
-- `unir_test_demo_init` 函数
+#### *unir_thread_demo_init -* 入口与初始化函数
 
-  - **功能**:程序入口，创建两个线程。
+- **功能**: 这是整个多线程演示功能的**入口点**。它的主要职责是创建两个独立的任务（线程），让它们并行运行各自的打印逻辑，并在运行一段时间后删除任务，展示多线程的完整生命周期。
+- 关键操作:
+  - **创建任务 A**: 调用`qosa_task_create`来创建一个名为 `taskA` 的任务，栈大小 1024 字节，执行`task_A_handler`函数，循环打印 "TASK A is running..."。
+  - **创建任务 B**: 调用`qosa_task_create`来创建一个名为 `taskB` 的任务，栈大小 1024 字节，执行`task_B_handler`函数，循环打印 "TASK B is running..."。
+  - **等待运行**: 调用`qosa_task_sleep_sec(20)`让两个任务并行运行 20 秒。
+  - **删除任务**: 依次调用`qosa_task_get_status`检查任务状态，然后调用`qosa_task_delete`删除 Task A 和 Task B。
+- **重要性**: 这是用户需要在自己的应用初始化流程中调用的函数，以启动多线程并发功能。同时展示了任务的创建、运行与销毁全流程。
 
-  - 关键操作: 
-    - 创建任务：调用`qosa_task_create` 创建task A 和task B。
-    - 删除任务：调用`qosa_task_delete` 创建task A 和task B。
+```c
+void unir_thread_demo_init(void)
+{
+    qosa_int32_t status;
+    int ret;
+    QLOGI("[Thread Demo]enter UniRTOS THREAD DEMO !!!");
+    if (UniRTOS_TASK_A == QOSA_NULL && UniRTOS_TASK_B == QOSA_NULL)
+    {
+        qosa_task_create(&UniRTOS_TASK_A, UniRTOS_TEST_DEMO_TASK_STACK_SIZE, UniRTOS_TEST_DEMO_TASK_PRIO, "taskA", task_A_handler, QOSA_NULL);
+        qosa_task_create(&UniRTOS_TASK_B, UniRTOS_TEST_DEMO_TASK_STACK_SIZE, UniRTOS_TEST_DEMO_TASK_PRIO, "taskB", task_B_handler, QOSA_NULL);
+    }
+    qosa_task_sleep_sec(20);
+    // ... delete tasks ...
+}
+```
 
-​	<img src="./media/code1.png" width="80%">
+#### *task_A_handler -* 任务 A 处理函数
 
-### 其他接口
+- **功能**: 任务 A 的**核心逻辑**。在一个无限循环中，每隔 2 秒打印一次标识信息，展示独立线程的持续运行能力。
+- 关键操作:
+  - **打印日志**: 调用`QLOGI`输出 "Thread Demo TASK A is running..."。
+  - **延时等待**: 调用`qosa_task_sleep_ms(2000)`让任务休眠 2 秒后再次执行。
+- **重要性**: 展示一个独立任务的典型运行模式——周期性执行业务逻辑。
 
-如有其他需求，如挂起线程，终止线程等，参考如下：
+```c
+static void task_A_handler(void *argv)
+{
+    while (1)
+    {
+        QLOGI("[Thread Demo][TASK A] TASK A is running... ");
+        qosa_task_sleep_ms(2000);
+    }
+}
+```
 
-1. *qosa_task_suppend* : 挂起线程任务。
-2. qosa_task_resume : 恢复被挂起的线程任务。
-3. *qosa_task_get_current_ref* ：获取当前线程的任务句柄。
-4. *qosa_task_change_priority* ：改变线程的优先级。
-5. *qosa_task_get_priority* ： 获取线程的优先级。
+#### *task_B_handler -* 任务 B 处理函数
+
+- **功能**: 任务 B 的**核心逻辑**。与 Task A 结构相同但打印不同的内容，在一个无限循环中，每隔 2 秒打印一次标识信息。两个任务并发执行，输出交替出现。
+- 关键操作:
+  - **打印日志**: 调用`QLOGI`输出 "Thread Demo TASK B is running..."。
+  - **延时等待**: 调用`qosa_task_sleep_ms(2000)`让任务休眠 2 秒后再次执行。
+- **重要性**: 与 Task A 形成**并发对比**，直观体现 RTOS 多任务调度效果。
+
+```c
+static void task_B_handler(void *argv)
+{
+    while (1)
+    {
+        QLOGI("[Thread Demo][TASK B] TASK B is running... ");
+        qosa_task_sleep_ms(2000);
+    }
+}
+```
 

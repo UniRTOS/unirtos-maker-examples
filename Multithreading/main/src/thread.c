@@ -1,5 +1,5 @@
 /*****************************************************************/ /**
-* @file test_demo.c
+* @file thread.c
 * @brief
 * @author lysander.li@quectel.com
 * @date 2026-04-08
@@ -11,6 +11,8 @@
 #include "qosa_log.h"
 #include <stdio.h>
 #include "unirtos_app_init_registry.h"
+#include "include.h"
+
 /*===========================================================================
  *  Macro Definition
  ===========================================================================*/
@@ -26,7 +28,7 @@
 static qosa_task_t UniRTOS_TASK_A = QOSA_NULL, UniRTOS_TASK_B = QOSA_NULL;
 
 
-void task_A_handler(void *argv)
+static void task_A_handler(void *argv)
 {
     while (1) 
     {
@@ -35,7 +37,7 @@ void task_A_handler(void *argv)
     }
 }
 
-void task_B_handler(void *argv)
+static void task_B_handler(void *argv)
 {
     while (1) 
     {
@@ -48,7 +50,7 @@ void unir_thread_demo_init(void)
 {
     qosa_int32_t status;
     int ret;
-    QLOGI("[Thread Demo]enter UniRTOS TEST DEMO !!!");
+    QLOGI("[Thread Demo]enter UniRTOS THREAD DEMO !!!");
     if (UniRTOS_TASK_A == QOSA_NULL && UniRTOS_TASK_B == QOSA_NULL)
     {
         qosa_task_create(&UniRTOS_TASK_A, UniRTOS_TEST_DEMO_TASK_STACK_SIZE, UniRTOS_TEST_DEMO_TASK_PRIO, "taskA", task_A_handler, QOSA_NULL);

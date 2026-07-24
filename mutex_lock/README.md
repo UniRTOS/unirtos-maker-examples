@@ -39,55 +39,158 @@
 
 ## 快速上手
 
-#### 编译并烧录项目
+### 1. 开发环境搭建
 
-确保unirtos-cli工具和unirtos-toolchain工具已安装，下载本项目并在在下载的项目目录开启Cmd或PowerShell窗口，执行命令`unirtos-cli env-setup`拉取编译环境，再执行命令`unirtos-cli build`进行编译。项目配置中默认编译型号为EG800ZCN_LA，如若使用的模组型号不是EG800ZCN_LA，可通过项目中`env_config.json`文件的`build`字段进行修改，详细编译与烧录流程请参考[快速启动](https://www.quectel.com.cn/unirtos/quick-start)。
+参考 [UNIRTOS 快速入门](https://docs.quectel.com/zh/UniRTOS/UniRTOS文档/快速上手/快速上手.html) 文档，了解如何搭建开发环境并完成基本开发流程。
 
-#### 硬件连接
+### 2. 项目结构
+
+```text
+mutex_lock/
+├── main
+  ├── inc               # 存放项目头文件
+    └── include.h       # Demo头文件
+  └── src               # 存放项目源码
+    └── mutex.c         # Demo源代码
+├── media               # README所需媒体文件
+├── menucongfig         # 项目配置的功能选项	
+├── CMakeLists.txt      # Demo构建脚本
+├── env_config.json     # UniRTOS工程环境配置
+└── README.md           # 本文件
+```
+
+### 3. 代码拉取
+
+新开启一个PowerShell窗口，执行以下命令：
+
+```
+# 拉取示例仓库
+unirtos-cli new -r unirtos-maker-examples
+# 进入该项目
+cd unirtos-maker-examples/mutex_lock
+```
+
+### 4. 构建项目
+
+拉取编译环境
+
+```
+unirtos-cli env-setup
+```
+
+在 PowerShell 窗口执行固件编译命令（如使用模块型号非EG800ZCN_LA，请替换实际需要编译的型号）：
+
+```
+unirtos-cli build -m EG800ZCN_LA -v EG800ZCNLAR01A01_OCPU_20260626
+```
+
+等待编译结束后，PowerShell 窗口末尾会提示固件编译结果：
+
+```text
+SUCCESS: Unirtos project built successfully!
+```
+
+### 5. 硬件连接
 
 使用数据线连接开发板和电脑即可。
 
-#### 效果展示
+### 6. 日志展示
 
-演示效果可查看当前目录下media文件夹中的.mp4视频，日志如图：
+固件烧录后开机启动，可在日志中看到类似输出：
 
-​	<img src="./media/result.png" width="80%">
+```text
+[Mutex DEMO]Enter UniRTOS Mutex DEMO!
+[Mutex DEMO]Task A add Count: 1
+[Mutex DEMO]Task B subtract Count: 0
+[Mutex DEMO]Task A add Count: 1
+[Mutex DEMO]Task B subtract Count: 0
+```
 
-### 代码概览
 
-#### 示例流程图
 
-​	<img src="./media/mutex示例流程图.png" width="50%">
+## 代码概览
 
-#### 主要功能接口
+### 主要功能接口
 
-##### unir_test_demo_init
+#### *unir_mutex_demo_init -* 入口与初始化函数
 
-**功能**：互斥锁演示功能的入口与初始化函数。主要职责是创建互斥锁，再启动两个独立任务，用于安全访问共享资源，不阻塞主程序。
-**关键操作**：
+- **功能**: 这是整个互斥锁演示功能的**入口点**。它的主要职责是创建互斥锁，再启动两个独立任务，用于安全访问共享资源，不阻塞主程序。
+- 关键操作:
+  - **创建互斥锁**: 调用`qosa_mutex_create`创建 `count_mutex`，用于保护共享变量 `share_count`。
+  - **创建任务 A**: 调用`qosa_task_create`创建 `mutex_demo_task_a`，栈大小 4096，普通优先级，执行`unirtos_task_a_handler`。
+  - **创建任务 B**: 调用`qosa_task_create`创建 `mutex_demo_task_b`，栈大小 4096，普通优先级，执行`unirtos_task_b_handler`。
+- **重要性**: 这是用户需要在自己的应用初始化流程中调用的函数，完成互斥锁与任务的启动，是多任务资源保护的标准入口。
 
-- 创建互斥锁：调用 **qosa_mutex_create** 创建count_mutex，用于保护共享变量share_count。
-- 任务创建：分别创建 **Task A** 和 **Task B** 两个任务，栈大小 4096，普通优先级。
-- **重要性**：用户需在应用初始化时调用，完成互斥锁与任务的启动，是多任务资源保护的标准入口。
+```c
+void unir_mutex_demo_init(void)
+{
+    QLOGV("[Mutex DEMO]Enter UniRTOS Mutex DEMO!");
+    int ret;
+    ret = qosa_mutex_create(&count_mutex);
+    if (ret != QOSA_OK)
+    {
+        QLOGE("[Mutex DEMO]Failed to create mutex, error code: %d\r\n", ret);
+        return;
+    }
+    if (UNIRTOS_TEST_TASK_A == QOSA_NULL)
+    {
+         qosa_task_create(&UNIRTOS_TEST_TASK_A, 4096, QOSA_PRIORITY_NORMAL, "mutex_demo_task_a", unirtos_task_a_handler, QOSA_NULL);
+    }
+    if (UNIRTOS_TEST_TASK_B == QOSA_NULL)
+    {
+         qosa_task_create(&UNIRTOS_TEST_TASK_B, 4096, QOSA_PRIORITY_NORMAL, "mutex_demo_task_b", unirtos_task_b_handler, QOSA_NULL);
+    }
+}
+```
 
-##### unirtos_task_a_handler
+#### *unirtos_task_a_handler -* 任务 A 处理函数
 
-**功能**：互斥锁演示任务 A。循环对共享资源执行 **加 1** 操作，通过互斥锁保证原子性与线程安全。
-**关键操作**：
+- **功能**: 互斥锁演示任务 A 的**核心逻辑**。循环对共享资源执行**加 1** 操作，通过互斥锁保证原子性与线程安全。
+- 关键操作:
+  - **申请互斥锁**: 调用`qosa_mutex_lock(count_mutex, QOSA_WAIT_FOREVER)`，永久等待直到获取锁。
+  - **操作共享资源**: 对 `share_count` 执行 `++`。
+  - **释放互斥锁**: 调用`qosa_mutex_unlock(count_mutex)`，让其他任务可以使用资源。
+  - **任务延时**: 调用`qosa_task_sleep_ms(100)`模拟业务处理。
+- **重要性**: 展示**读-改-写**类共享资源如何正确加锁、操作、解锁，防止数据竞争。
 
-- 申请互斥锁：**qosa_mutex_lock**，永久等待直到获取锁。
-- 操作共享资源：对share_count执行+1。
-- 释放互斥锁：**qosa_mutex_unlock**，让其他任务可以使用资源。
-- 任务延时：**qosa_task_sleep_ms(100)** 模拟业务处理。
-- **重要性**：展示**读 - 改 - 写**类共享资源如何安全加锁、解锁。
+```c
+static void unirtos_task_a_handler(void *arg)
+{
+    int ret;
+    while (1)
+    {
+        ret = qosa_mutex_lock(count_mutex, QOSA_WAIT_FOREVER);
+        if (ret != QOSA_OK) { continue; }
+        share_count++;
+        QLOGI("[Mutex DEMO]Task A add Count: %d\r\n", share_count);
+        qosa_mutex_unlock(count_mutex);
+        qosa_task_sleep_ms(100);
+    }
+}
+```
 
-##### unirtos_task_b_handler
+#### *unirtos_task_b_handler -* 任务 B 处理函数
 
-**功能**：互斥锁演示任务 B。循环对共享资源执行 **减 1** 操作，与任务 A 竞争同一把锁，验证互斥机制。
-**关键操作**：
+- **功能**: 互斥锁演示任务 B 的**核心逻辑**。循环对共享资源执行**减 1** 操作，与任务 A 竞争同一把锁，验证互斥机制。
+- 关键操作:
+  - **申请互斥锁**: 调用`qosa_mutex_lock(count_mutex, QOSA_WAIT_FOREVER)`，永久等待直到获取锁。
+  - **操作共享资源**: 对 `share_count` 执行 `--`。
+  - **释放互斥锁**: 调用`qosa_mutex_unlock(count_mutex)`。
+  - **任务延时**: 调用`qosa_task_sleep_ms(150)`模拟业务处理。
+- **重要性**: 与任务 A 形成**竞争场景**，直观体现互斥锁防止多任务并发冲突的作用。
 
-- 申请互斥锁：**qosa_mutex_lock**，永久等待直到获取锁。
-- 操作共享资源：对share_count执行-1。
-- 释放互斥锁：**qosa_mutex_unlock**。
-- 任务延时：**qosa_task_sleep_ms(150)**，模拟业务处理。
-- **重要性**：与任务 A 形成**竞争场景**，直观体现互斥锁防止多任务并发冲突的作用。
+```c
+static void unirtos_task_b_handler(void *arg)
+{
+    int ret;
+    while (1)
+    {
+        ret = qosa_mutex_lock(count_mutex, QOSA_WAIT_FOREVER);
+        if (ret != QOSA_OK) { continue; }
+        share_count--;
+        QLOGI("[Mutex DEMO]Task B subtract Count: %d\r\n", share_count);
+        qosa_mutex_unlock(count_mutex);
+        qosa_task_sleep_ms(150);
+    }
+}
+```

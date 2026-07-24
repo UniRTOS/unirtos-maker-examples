@@ -2,6 +2,6 @@
 #ifndef _INCLUDE_H_
 #define _INCLUDE_H_
 
-// your code here
+void unir_mutex_demo_init(void);
 
 #endif
