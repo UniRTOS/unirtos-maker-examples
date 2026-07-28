@@ -20,25 +20,17 @@
 
 ### 硬件要求
 
-| **硬件名称**       | **数量** | **实物图**                                             | **获取链接**                                                 |
-| ------------------ | -------- | ------------------------------------------------------ | ------------------------------------------------------------ |
-| EG800Z-CN开发板    | 1        | <img src="./media/开发板实物图.jpg" width="50%">       | [点此获取](https://www.quecmall.com/goods-detail/2c90800b987f06090198aca7bde100a6) |
-| USB转TTL CH340模块 | 1        | <img src ="./media/usb-ttl.png" width="50%">           | [点此获取](https://item.taobao.com/item.htm?ali_refid=a3_430673_1006%3A1121464922%3AH%3AACMF3R2mJsla45tNgCvtiQ%3D%3D%3Aaa3d37a85eaf985ceb913c7929f88342&ali_trackid=318_aa3d37a85eaf985ceb913c7929f88342&id=522571378803&loginBonus=1&mi_id=0000Hqlvbw9WBQxv2Q7LBGKvWoqh_AyMM-yCsT3vnVrF0SY&mm_sceneid=0_0_111680763_0&priceTId=2147845317756178702896957e11bf&spm=a21n57.sem.item.5&utparam={"aplus_abtest"%3A"e0944e0c3933579b34a15cc5e0d0bd96"}&xxc=ad_ztc) |
-| USB数据线          | 1        | <img src="./media/数据线.png" alt="img"  width="50%"/> | [点此获取](https://detail.tmall.com/item.htm?abbucket=11&id=712043397690&mi_id=0000UuATUkl2Swill--d8ar3-R828dAfvrmApTj3VzPdxhA&ns=1&priceTId=214783fc17750971433067563e1379&skuId=5825460040081&spm=a21n57.1.hoverItem.4&utparam={"aplus_abtest"%3A"d39c694c59ac1c7b55f24ab87fd2bb30"}&xxc=taobaoSearch) |
+- EG800Z-CN开发板，[点此购买开发板](https://www.quecmall.com/goods-detail/2c90800b987f06090198aca7bde100a6)。
 
-### 软件要求
+​	<img src="E:/unirtos-cli_demos/UniRTOS-Maker-Examples/tcp_demo/media/开发板实物图.jpg">
 
-| **软件名称**          | **描述**                                                     | **获取链接**                                                 |
-| --------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| unirtos-toolchain.exe | 编译工具链安装程序                                           | [点此获取](https://www.quectel.com.cn/download/unirtos-交叉编译工具链) |
-| Python                | 用于运行unirtos-cli工具，需使用3.9及更高版本。               | [快速启动](https://www.quectel.com.cn/unirtos/quick-start)-环境搭建章节 |
-| Git                   | unirtos-cli使用该工具拉取SDK、依赖库等，需使用2.20及更高版本。 | [快速启动](https://www.quectel.com.cn/unirtos/quick-start)-环境搭建章节 |
-| unirtos-cli           | UniRTOS的命令行工具，用于一键拉取SDK、快速创建工程。         | [快速启动](https://www.quectel.com.cn/unirtos/quick-start)-环境搭建章节 |
-| Quectel USB驱动       | 用于PC识别模块的USB枚举接口，根据模组所属平台选择，当前链接供移芯平台模组使用。 | [点此获取](https://www.quectel.com.cn/download/quectel_windows_usb_drivery_v1-0_cn) |
-| QFlash.exe            | 模块固件烧录程序，用于烧录UniRTOS编译生成的固件              | [点此获取](https://www.quectel.com.cn/download/qflash_v7-9_cn) |
-| EPAT                  | 移芯平台日志调试工具                                         | [点此获取](https://www.quectel.com.cn/download/epat日志工具) |
+- USB数据线（TYPE-C），[点此购买](https://detail.tmall.com/item.htm?abbucket=11&id=712043397690&mi_id=0000UuATUkl2Swill--d8ar3-R828dAfvrmApTj3VzPdxhA&ns=1&priceTId=214783fc17750971433067563e1379&skuId=5825460040081&spm=a21n57.1.hoverItem.4&utparam={"aplus_abtest"%3A"d39c694c59ac1c7b55f24ab87fd2bb30"}&xxc=taobaoSearch)。
 
+​	<img src="E:/unirtos-cli_demos/UniRTOS-Maker-Examples/tcp_demo/media/数据线.png">
 
+- USB转TTL CH340模块，[点此获取](https://item.taobao.com/item.htm?ali_refid=a3_430673_1006%3A1121464922%3AH%3AACMF3R2mJsla45tNgCvtiQ%3D%3D%3Aaa3d37a85eaf985ceb913c7929f88342&ali_trackid=318_aa3d37a85eaf985ceb913c7929f88342&id=522571378803&loginBonus=1&mi_id=0000Hqlvbw9WBQxv2Q7LBGKvWoqh_AyMM-yCsT3vnVrF0SY&mm_sceneid=0_0_111680763_0&priceTId=2147845317756178702896957e11bf&spm=a21n57.sem.item.5&utparam={%22aplus_abtest%22%3A%22e0944e0c3933579b34a15cc5e0d0bd96%22}&xxc=ad_ztc)。
+
+​	<img src ="./media/usb-ttl.png" width="30%">
 
 ## 快速上手
 
