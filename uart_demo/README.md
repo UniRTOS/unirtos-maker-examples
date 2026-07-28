@@ -22,11 +22,11 @@
 
 - EG800Z-CN开发板，[点此购买开发板](https://www.quecmall.com/goods-detail/2c90800b987f06090198aca7bde100a6)。
 
-​	<img src="E:/unirtos-cli_demos/UniRTOS-Maker-Examples/tcp_demo/media/开发板实物图.jpg">
+​	<img src="./media/开发板实物图.jpg">
 
 - USB数据线（TYPE-C），[点此购买](https://detail.tmall.com/item.htm?abbucket=11&id=712043397690&mi_id=0000UuATUkl2Swill--d8ar3-R828dAfvrmApTj3VzPdxhA&ns=1&priceTId=214783fc17750971433067563e1379&skuId=5825460040081&spm=a21n57.1.hoverItem.4&utparam={"aplus_abtest"%3A"d39c694c59ac1c7b55f24ab87fd2bb30"}&xxc=taobaoSearch)。
 
-​	<img src="E:/unirtos-cli_demos/UniRTOS-Maker-Examples/tcp_demo/media/数据线.png">
+​	<img src="./media/数据线.png">
 
 - USB转TTL CH340模块，[点此获取](https://item.taobao.com/item.htm?ali_refid=a3_430673_1006%3A1121464922%3AH%3AACMF3R2mJsla45tNgCvtiQ%3D%3D%3Aaa3d37a85eaf985ceb913c7929f88342&ali_trackid=318_aa3d37a85eaf985ceb913c7929f88342&id=522571378803&loginBonus=1&mi_id=0000Hqlvbw9WBQxv2Q7LBGKvWoqh_AyMM-yCsT3vnVrF0SY&mm_sceneid=0_0_111680763_0&priceTId=2147845317756178702896957e11bf&spm=a21n57.sem.item.5&utparam={%22aplus_abtest%22%3A%22e0944e0c3933579b34a15cc5e0d0bd96%22}&xxc=ad_ztc)。
 
