@@ -1,21 +1,21 @@
 # UniRTOS-Maker-Examples
 
-UniRTOS 官方创客案例仓库，汇聚移远通信官网 UniRTOS 板块对外开源的大部分创客案例源码，旨在为广大开发者、创客群体提供可直接参考、复用的实战级代码示例。
+The official maker case repository for UniRTOS, aggregating most of the open-source maker case source codes from the UniRTOS section on Quectel's official website. It aims to provide developers and makers with production-level code examples that can be directly referenced and reused.
 
-## 仓库简介
+## Repository Introduction
 
-UniRTOS是移远通信自主开发并持续维护的开发框架，以统一公共代码为核心，构建起跨模块的标准化开发平台，通过统一的技术架构打破不同模块间的开发壁垒，实现代码复用与高效移植。无论是物联网终端的快速开发、多场景应用适配，还是规模化项目的落地部署，UniRTOS都能提供简洁易用、稳定可靠的技术支撑，助力开发者降低开发成本、提升项目迭代效率。
+UniRTOS is a development framework independently developed and continuously maintained by Quectel. Centered around a unified common codebase, it builds a standardized development platform across modules, breaking down development barriers between different modules through a unified technical architecture, enabling code reuse and efficient portability. Whether it is rapid development of IoT terminals, adaptation to multi-scenario applications, or deployment of large-scale projects, UniRTOS offers simple, easy-to-use, stable, and reliable technical support, helping developers reduce development costs and improve project iteration efficiency.
 
-本仓库作为 UniRTOS  板块的重要补充，收录覆盖物联网各典型应用场景的创客案例源码，所有案例均经过验证，可直接运行在移远通信支持UniRTOS的模组上。
+This repository serves as an important supplement to the UniRTOS section, containing maker case source codes covering typical IoT application scenarios. All cases have been verified and can run directly on Quectel modules that support UniRTOS.
 
-## 核心价值
+## Core Value
 
-- **官方认证**：案例均来源于移远通信官网 UniRTOS 板块，保证代码的规范性与可用性；
-- **即拿即用**：提供完整的源码实现，开发者可快速基于案例进行二次开发，减少重复造轮子；
-- **场景丰富**：覆盖物联网通信、传感器交互、外设驱动、等多类创客常见开发场景。
+- **Official Certification**: All cases originate from the UniRTOS section on Quectel's official website, ensuring code standardization and usability.
+- **Ready to Use**: Provides complete source code implementations, allowing developers to quickly perform secondary development based on the cases, reducing redundant reinvention.
+- **Rich Scenarios**: Covers many common maker development scenarios such as IoT communication, sensor interaction, peripheral drivers, and more.
 
-如果这些案例对您的 UniRTOS 开发工作有所帮助，欢迎收藏本仓库，也期待您的 Star 与 Fork！
+If these cases are helpful to your UniRTOS development work, feel free to star this repository, and we look forward to your stars and forks!
 
-## 快速导航
+## Quick Navigation
 
-如需查看移远官网 UniRTOS 板块原版案例文档或更多资源, 请访问移远通信官网开发者栏中的UniRTOS板块
+For the original case documentation or more resources from the UniRTOS section on Quectel's official website, please visit the UniRTOS section under the Developer column on Quectel's official website.
