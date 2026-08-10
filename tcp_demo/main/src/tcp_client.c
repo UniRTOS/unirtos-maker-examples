@@ -17,7 +17,7 @@
 #include "qosa_sys.h"
 #include "qosa_log.h"
 #include "qosa_asyn_dns.h"
-#include "include.h"
+#include "tcp_client.h"
 #include "qosa_datacall.h"
 #include "unirtos_app_init_registry.h"
 

@@ -15,7 +15,7 @@
 #include "qosa_system_utils.h"
 #include "qosa_at_config.h"
 #include "unirtos_app_init_registry.h"
-#include "include.h"
+#include "sms.h"
 
 #define QOS_LOG_TAG   LOG_TAG_DEMO
 

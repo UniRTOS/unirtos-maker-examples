@@ -11,7 +11,7 @@
 #include "qosa_log.h"
 #include <stdio.h>
 #include "unirtos_app_init_registry.h"
-#include "include.h"
+#include "thread.h"
 
 /*===========================================================================
  *  Macro Definition

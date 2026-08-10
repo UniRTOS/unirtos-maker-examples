@@ -7,7 +7,7 @@
 #include "qosa_sys.h"
 #include "qosa_log.h"
 #include "unirtos_app_init_registry.h"
-#include "include.h"
+#include "mutex.h"
 
 #define QOS_LOG_TAG LOG_TAG_DEMO
 static qosa_task_t          UNIRTOS_TEST_TASK_A = QOSA_NULL, UNIRTOS_TEST_TASK_B = QOSA_NULL;

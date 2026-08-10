@@ -1,93 +1,81 @@
-# 【EG800Z-CN】多线程示例
+# [EG800Z-CN] Multithreading Example
 
-## 项目概述
+## Project Overview
 
-本案例使用移远通信EG800Z-CN开发板和UniRTOS，实现了一个简单的多线程并发程序，创建两个线程，分别打印不同的内容，展示多任务“同时”执行的效果。
+This example uses the Quectel EG800Z-CN development board and UniRTOS to implement a simple concurrent program. It creates two threads that print different content, demonstrating the effect of multitask "simultaneous" execution.
 
-### 功能特性
+## Features
 
-**基于多线程的并发任务执行**
+**Concurrent task execution based on multithreading**
 
-- **独立线程并发运行**：创建两个独立的任务线程，实现不同内容的并行打印输出，互不干扰。
-- **差异化任务处理**：每个线程执行专属的打印逻辑，可输出自定义的、具有区分度的信息流。
-- **纯软件调度**：完全依赖RTOS的软件线程调度机制，无需专用硬件加速。
+- **Independent concurrent threads**: Creates two independent task threads that print different messages in parallel.
+- **Task-specific processing**: Each thread has its own print logic and distinguishable output stream.
+- **Pure software scheduling**: Fully relies on RTOS thread scheduling, with no dedicated hardware acceleration required.
 
-​	<img src="./media/Log.png" width="80%">
+<img src="./media/Log.png" width="80%">
 
+## Development Preparation
 
+### Hardware Requirements
 
-## 开发准备
+- EG800Z-CN development board, [Buy the board here](https://www.quecmall.com/goods-detail/2c90800b987f06090198aca7bde100a6).
 
-### 硬件要求
+  <img src="./media/开发板实物图.jpg">
 
-- EG800Z-CN开发板，[点此购买开发板](https://www.quecmall.com/goods-detail/2c90800b987f06090198aca7bde100a6)。
+- USB data cable (Type-C), [Buy here](https://detail.tmall.com/item.htm?abbucket=11&id=712043397690&mi_id=0000UuATUkl2Swill--d8ar3-R828dAfvrmApTj3VzPdxhA&ns=1&priceTId=214783fc17750971433067563e1379&skuId=5825460040081&spm=a21n57.1.hoverItem.4&utparam={"aplus_abtest"%3A"d39c694c59ac1c7b55f24ab87fd2bb30"}&xxc=taobaoSearch).
 
-​	<img src="./media/开发板实物图.jpg">
+  <img src="./media/数据线.png">
 
-- USB数据线（TYPE-C），[点此购买](https://detail.tmall.com/item.htm?abbucket=11&id=712043397690&mi_id=0000UuATUkl2Swill--d8ar3-R828dAfvrmApTj3VzPdxhA&ns=1&priceTId=214783fc17750971433067563e1379&skuId=5825460040081&spm=a21n57.1.hoverItem.4&utparam={"aplus_abtest"%3A"d39c694c59ac1c7b55f24ab87fd2bb30"}&xxc=taobaoSearch)。
+## Quick Start
 
-​	<img src="./media/数据线.png">
+### 1. Set up the development environment
 
-## 快速上手
+Refer to [UNIRTOS Quick Start](https://docs.quectel.com/zh/UniRTOS/UniRTOS文档/快速上手/快速上手.html).
 
-### 1. 开发环境搭建
-
-参考 [UNIRTOS 快速入门](https://docs.quectel.com/zh/UniRTOS/UniRTOS文档/快速上手/快速上手.html) 文档，了解如何搭建开发环境并完成基本开发流程。
-
-### 2. 项目结构
+### 2. Project structure
 
 ```text
 Multithreading/
 ├── main
-  ├── inc               # 存放项目头文件
-    └── include.h       # Demo头文件
-  └── src               # 存放项目源码
-    └── thread.c        # Demo源代码
-├── media               # README所需媒体文件
-├── menucongfig         # 项目配置的功能选项	
-├── CMakeLists.txt      # Demo构建脚本
-├── env_config.json     # UniRTOS工程环境配置
-└── README.md           # 本文件
+  ├── inc               # Project header files
+    └── thread.h        # Demo header
+  └── src               # Project source files
+    └── thread.c        # Demo source code
+├── media               # Media files used by README
+├── menucongfig         # Feature options for project config
+├── CMakeLists.txt      # Demo build script
+├── env_config.json     # UniRTOS environment configuration
+└── README.md           # This file
 ```
 
-### 3. 代码拉取
+### 3. Get the code
 
-新开启一个PowerShell窗口，执行以下命令：
-
-```
-# 拉取示例仓库
+```bash
+# Clone the example repository
 unirtos-cli new -r unirtos-maker-examples
-# 进入该项目
+# Enter this project
 cd unirtos-maker-examples/Multithreading
 ```
 
-### 4. 构建项目
+### 4. Build the project
 
-拉取编译环境
-
-```
+```bash
 unirtos-cli env-setup
 ```
 
-在 PowerShell 窗口执行固件编译命令（如使用模块型号非EG800ZCN_LA，请替换实际需要编译的型号）：
-
-```
+```bash
 unirtos-cli build -m EG800ZCN_LA -v EG800ZCNLAR01A01_OCPU_20260626
 ```
-
-等待编译结束后，PowerShell 窗口末尾会提示固件编译结果：
 
 ```text
 SUCCESS: Unirtos project built successfully!
 ```
 
-### 5. 硬件连接
+### 5. Hardware connection
 
-使用USB数据线连接开发板和电脑即可。
+Connect the development board to your PC with a USB cable.
 
-### 6. 日志展示
-
-固件烧录后开机启动，可在日志中看到类似输出：
+### 6. Log output
 
 ```text
 [Thread Demo][TASK A] TASK A is running... 
@@ -98,21 +86,19 @@ SUCCESS: Unirtos project built successfully!
 [Thread Demo] Task B deleted successfully
 ```
 
+## Code Overview
 
+### Main Interfaces
 
-## 代码概览
+#### *unir_thread_demo_init* - Entry and initialization function
 
-### 主要功能接口
-
-#### *unir_thread_demo_init -* 入口与初始化函数
-
-- **功能**: 这是整个多线程演示功能的**入口点**。它的主要职责是创建两个独立的任务（线程），让它们并行运行各自的打印逻辑，并在运行一段时间后删除任务，展示多线程的完整生命周期。
-- 关键操作:
-  - **创建任务 A**: 调用`qosa_task_create`来创建一个名为 `taskA` 的任务，栈大小 1024 字节，执行`task_A_handler`函数，循环打印 "TASK A is running..."。
-  - **创建任务 B**: 调用`qosa_task_create`来创建一个名为 `taskB` 的任务，栈大小 1024 字节，执行`task_B_handler`函数，循环打印 "TASK B is running..."。
-  - **等待运行**: 调用`qosa_task_sleep_sec(20)`让两个任务并行运行 20 秒。
-  - **删除任务**: 依次调用`qosa_task_get_status`检查任务状态，然后调用`qosa_task_delete`删除 Task A 和 Task B。
-- **重要性**: 这是用户需要在自己的应用初始化流程中调用的函数，以启动多线程并发功能。同时展示了任务的创建、运行与销毁全流程。
+- **Function**: Entry point for this multithreading demo. It creates two independent tasks, runs them in parallel for a while, then deletes them to demonstrate a full task lifecycle.
+- Key operations:
+  - **Create Task A**: `qosa_task_create` creates `taskA` (1024-byte stack), running `task_A_handler` to print "TASK A is running...".
+  - **Create Task B**: `qosa_task_create` creates `taskB` (1024-byte stack), running `task_B_handler` to print "TASK B is running...".
+  - **Run period**: `qosa_task_sleep_sec(20)` lets both tasks run for 20 seconds.
+  - **Delete tasks**: Calls `qosa_task_get_status` then `qosa_task_delete` for both tasks.
+- **Importance**: Call this function in your app init flow to start multithreaded behavior and understand creation-run-destroy flow.
 
 ```c
 void unir_thread_demo_init(void)
@@ -130,13 +116,13 @@ void unir_thread_demo_init(void)
 }
 ```
 
-#### *task_A_handler -* 任务 A 处理函数
+#### *task_A_handler* - Task A handler
 
-- **功能**: 任务 A 的**核心逻辑**。在一个无限循环中，每隔 2 秒打印一次标识信息，展示独立线程的持续运行能力。
-- 关键操作:
-  - **打印日志**: 调用`QLOGI`输出 "Thread Demo TASK A is running..."。
-  - **延时等待**: 调用`qosa_task_sleep_ms(2000)`让任务休眠 2 秒后再次执行。
-- **重要性**: 展示一个独立任务的典型运行模式——周期性执行业务逻辑。
+- **Function**: Core logic of Task A. Prints a message every 2 seconds in an infinite loop.
+- Key operations:
+  - `QLOGI` prints "TASK A is running...".
+  - `qosa_task_sleep_ms(2000)` sleeps 2 seconds.
+- **Importance**: Demonstrates a typical periodic worker task.
 
 ```c
 static void task_A_handler(void *argv)
@@ -149,13 +135,13 @@ static void task_A_handler(void *argv)
 }
 ```
 
-#### *task_B_handler -* 任务 B 处理函数
+#### *task_B_handler* - Task B handler
 
-- **功能**: 任务 B 的**核心逻辑**。与 Task A 结构相同但打印不同的内容，在一个无限循环中，每隔 2 秒打印一次标识信息。两个任务并发执行，输出交替出现。
-- 关键操作:
-  - **打印日志**: 调用`QLOGI`输出 "Thread Demo TASK B is running..."。
-  - **延时等待**: 调用`qosa_task_sleep_ms(2000)`让任务休眠 2 秒后再次执行。
-- **重要性**: 与 Task A 形成**并发对比**，直观体现 RTOS 多任务调度效果。
+- **Function**: Core logic of Task B. Same pattern as Task A but with different output.
+- Key operations:
+  - `QLOGI` prints "TASK B is running...".
+  - `qosa_task_sleep_ms(2000)` sleeps 2 seconds.
+- **Importance**: Works with Task A to show concurrent scheduling behavior clearly.
 
 ```c
 static void task_B_handler(void *argv)
@@ -167,4 +153,3 @@ static void task_B_handler(void *argv)
     }
 }
 ```
-

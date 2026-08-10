@@ -14,7 +14,7 @@
 #include "qosa_def.h"
 #include "qosa_log.h"
 #include "unirtos_app_init_registry.h"
-#include "include.h"
+#include "led_gpio.h"
 
 #define QOS_LOG_TAG   LOG_TAG_DEMO
 

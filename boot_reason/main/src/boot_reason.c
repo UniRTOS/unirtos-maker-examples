@@ -1,5 +1,5 @@
 /*****************************************************************/ /**
-* @file pwrkey_demo.c
+* @file boot_reason.c
 * @brief
 * @author Silas.sun@quectel.com
 * @date 2025-12-18
@@ -15,7 +15,7 @@
 **********************************************************************/
 #include "qosa_power.h"
 #include "qosa_log.h"
-#include "include.h"
+#include "boot_reason.h"
 #include "unirtos_app_init_registry.h"
 
 #define QOS_LOG_TAG LOG_TAG_DEMO

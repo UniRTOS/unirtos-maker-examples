@@ -1,103 +1,97 @@
-# 【EG800Z-CN】TCP 客户端示例
+# [EG800Z-CN] TCP Client Example
 
-### 项目概述
+## Project Overview
 
-本案例使用移远通信EG800Z-CN开发板和UniRTOS，调用UniRTOS中Socket相关功能函数编写。让开发板成为TCP客户端，远程连接其他TCP服务器，进行数据交互。
+This example uses the Quectel EG800Z-CN development board and UniRTOS Socket APIs. It makes the board act as a TCP client, connecting to a remote TCP server for data interaction.
 
-### 功能特性
+## Features
 
-**阻塞式TCP客户端**
+**Blocking TCP client**
 
-- **端到端连接自动化**：集成“蜂窝网络附着 → PDP上下文激活 → DNS域名解析 → TCP连接建立”全流程，实现从设备上电到与远程服务器建立可靠通信链路。
-- **健壮的数据会话管理**：在成功建立TCP连接后，执行预设次数的“发送请求-接收响应”数据交互循环，并内置对send/read操作结果的严格校验，确保会话的可靠性与完整性。
+- **End-to-end connection automation**: Covers full flow from cellular attach -> PDP activation -> DNS resolution -> TCP connect.
+- **Robust session handling**: After connection, runs a predefined send/receive loop and strictly checks send/read results for reliable communication.
 
-### 开发准备
+## Development Preparation
 
-#### 硬件要求
+### Hardware Requirements
 
-- EG800Z-CN开发板，[点此购买开发板](https://www.quecmall.com/goods-detail/2c90800b987f06090198aca7bde100a6)。
+- EG800Z-CN development board, [Buy the board here](https://www.quecmall.com/goods-detail/2c90800b987f06090198aca7bde100a6).
 
-​	<img src="./media/开发板实物图.jpg">
+  <img src="./media/开发板实物图.jpg">
 
-- USB数据线（TYPE-C），[点此购买](https://detail.tmall.com/item.htm?abbucket=11&id=712043397690&mi_id=0000UuATUkl2Swill--d8ar3-R828dAfvrmApTj3VzPdxhA&ns=1&priceTId=214783fc17750971433067563e1379&skuId=5825460040081&spm=a21n57.1.hoverItem.4&utparam={"aplus_abtest"%3A"d39c694c59ac1c7b55f24ab87fd2bb30"}&xxc=taobaoSearch)。
+- USB data cable (Type-C), [Buy here](https://detail.tmall.com/item.htm?abbucket=11&id=712043397690&mi_id=0000UuATUkl2Swill--d8ar3-R828dAfvrmApTj3VzPdxhA&ns=1&priceTId=214783fc17750971433067563e1379&skuId=5825460040081&spm=a21n57.1.hoverItem.4&utparam={"aplus_abtest"%3A"d39c694c59ac1c7b55f24ab87fd2bb30"}&xxc=taobaoSearch).
 
-​	<img src="./media/数据线.png">
+  <img src="./media/数据线.png">
 
-- 有效SIM卡（可发短信）。
+- Valid SIM card (SMS-capable).
 
-​	<img src="./media/SIM.png">
+  <img src="./media/SIM.png">
 
-## 快速上手
+## Quick Start
 
-### 1. 开发环境搭建
+### 1. Set up the development environment
 
-参考 [UNIRTOS 快速入门](https://docs.quectel.com/zh/UniRTOS/UniRTOS文档/快速上手/快速上手.html) 文档，了解如何搭建开发环境并完成基本开发流程。
+Refer to [UNIRTOS Quick Start](https://docs.quectel.com/zh/UniRTOS/UniRTOS文档/快速上手/快速上手.html).
 
-### 2. 项目结构
+### 2. Project structure
 
 ```text
 tcp_demo/
 ├── main
-  ├── inc               # 存放项目头文件
-    └── include.h       # Demo头文件
-  └── src               # 存放项目源码
-    └── tcp_client.c    # Demo源代码
-├── media               # README所需媒体文件
-├── menucongfig         # 项目配置的功能选项	
-├── CMakeLists.txt      # Demo构建脚本
-├── env_config.json     # UniRTOS工程环境配置
-└── README.md           # 本文件
+  ├── inc               # Project header files
+    └── tcp_client.h    # Demo header
+  └── src               # Project source files
+    └── tcp_client.c    # Demo source code
+├── media               # Media files used by README
+├── menucongfig         # Feature options for project config
+├── CMakeLists.txt      # Demo build script
+├── env_config.json     # UniRTOS environment configuration
+└── README.md           # This file
 ```
 
-### 3. 代码拉取
+### 3. Get the code
 
-新开启一个PowerShell窗口，执行以下命令：
-
-```
-# 拉取示例仓库
+```bash
+# Clone the example repository
 unirtos-cli new -r unirtos-maker-examples
-# 进入该项目
+# Enter this project
 cd unirtos-maker-examples/tcp_demo
 ```
 
-### 4. 构建项目
+### 4. Build the project
 
-拉取编译环境
-
-```
+```bash
 unirtos-cli env-setup
 ```
 
-在 PowerShell 窗口执行固件编译命令（如使用模块型号非EG800ZCN_LA，请替换实际需要编译的型号）：
-
-```
+```bash
 unirtos-cli build -m EG800ZCN_LA -v EG800ZCNLAR01A01_OCPU_20260626
 ```
-
-等待编译结束后，PowerShell 窗口末尾会提示固件编译结果：
 
 ```text
 SUCCESS: Unirtos project built successfully!
 ```
 
-### 5. 修改配置参数
+### 5. Modify configuration parameters
 
-编译前，请修改源码中需要连接的 TCP 服务器参数。修改点位于 `tcp_demo/main/src/tcp_client.c` 中，需要修改的参数宏为 `SOCKET_BLOCK_CONNECT_SERVER_ADDR`（服务器 IP 地址）、`SOCKET_BLOCK_CONNECT_SERVER_PORT`（服务器端口）、`SOCKET_BLOCK_CONNECT_SERVER_NAME`（服务器域名）。
+Before building, modify TCP server parameters in source code. In `tcp_demo/main/src/tcp_client.c`, update:
 
-推荐使用 [ConnectLab](https://connectlab.phicotek.com/connectlab/) 新建测试服务器，将真实的服务器地址和端口填入项目代码中。
+- `SOCKET_BLOCK_CONNECT_SERVER_ADDR` (server IP address)
+- `SOCKET_BLOCK_CONNECT_SERVER_PORT` (server port)
+- `SOCKET_BLOCK_CONNECT_SERVER_NAME` (server domain)
 
-​	<img src=".\media\connectlab.png" width="80%">
+You can use [ConnectLab](https://connectlab.phicotek.com/connectlab/) to create a test server and fill in real address/port.
 
-### 6. 硬件连接
+<img src="./media/connectlab.png" width="80%">
 
-​	<img src=".\media\connect.png" width="50%">
+### 6. Hardware connection
 
-1. 按卡槽丝印提示方向拨开卡槽盖，将SIM卡放入，再扣好盖子。
-2. 使用数据线连接开发板和电脑。
+<img src="./media/connect.png" width="50%">
 
-### 7. 日志展示
+1. Open the SIM slot cover according to the printed direction, insert the SIM card, then close the cover.
+2. Connect the board to your PC with a USB cable.
 
-固件烧录后开机启动，可在日志中看到类似输出：
+### 7. Log output
 
 ```text
 [TCP DEMO]dns_syn_getaddrinfo success
@@ -106,19 +100,17 @@ SUCCESS: Unirtos project built successfully!
 [TCP DEMO]recv xx bytes: ...
 ```
 
+## Code Overview
 
+### Main Interfaces
 
-## 代码概览
+#### *unir_tcp_demo_init* - Entry and initialization function
 
-### 主要功能接口
-
-#### *unir_tcp_demo_init -* 入口与初始化函数
-
-- **功能**: 这是整个 TCP 阻塞客户端演示功能的**入口点**。它的主要职责是创建并启动一个独立的任务（线程），让 TCP 通信逻辑在后台运行，而不阻塞主程序。
-- 关键操作:
-  - **任务创建**: 调用`qosa_task_create`来创建一个名为 `app_block` 的新任务。这个新任务将执行`socket_app_block_process`函数。
-  - **任务配置**: 栈大小 4096 字节（4KB），使用普通优先级，保证 TCP 流程稳定运行。
-- **重要性**: 这是用户需要在自己的应用初始化流程中调用的函数，以启动 TCP 客户端通信功能。通过 `UNIRTOS_APP_EXPORT` 宏注册为应用自动初始化入口，系统启动时自动调用。
+- **Function**: Entry point of this blocking TCP client demo. Creates and starts a dedicated task to run TCP logic in the background.
+- Key operations:
+  - **Task creation**: Calls `qosa_task_create` to create `app_block`, which runs `socket_app_block_process`.
+  - **Task config**: 4 KB stack and normal priority for stable operation.
+- **Importance**: Call this function in app init flow to start TCP communication. It is registered as auto-init entry via `UNIRTOS_APP_EXPORT`.
 
 ```c
 void unir_tcp_demo_init(void)
@@ -134,36 +126,36 @@ void unir_tcp_demo_init(void)
 }
 ```
 
-#### *socket_app_block_process -* TCP 客户端主处理函数
+#### *socket_app_block_process* - Main TCP client handler
 
-- **功能**: TCP 阻塞客户端的**核心逻辑**所在。完成联网、DNS 解析、Socket 创建与连接、循环收发数据的完整流程。
-- 关键操作:
-  - **等待网络就绪**: 调用`qosa_task_sleep_sec(10)`延时 10 秒，等待模组完成网络注册。
-  - **激活 PDP 联网**: 调用`socket_app_datacall_active`确保数据链路可用，失败则退出。
-  - **DNS 解析**: 调用`socket_app_block_dns`将服务器域名解析为 IP 地址，失败则退出。
-  - **创建并连接 Socket**: 调用`socket_app_block_create`创建阻塞式 TCP Socket 并连接服务器，失败则退出。
-  - **循环收发**: 最多循环 20 次，每次调用`socket_app_block_write`发送数据，等待 1 秒后调用`socket_app_block_read`接收服务器响应；任一操作失败则中止循环。
-  - **关闭连接**: 通信完成后调用标准 `close(socket_fd)` 释放 Socket 资源。
-- **重要性**: 完整封装阻塞式 TCP 客户端标准流程，是物联网设备 TCP 通信的核心参考。
+- **Function**: Core logic of the blocking TCP client. Implements complete flow: network ready, DNS resolve, socket create/connect, and looped data exchange.
+- Key operations:
+  - Wait for network registration with `qosa_task_sleep_sec(10)`.
+  - Activate PDP via `socket_app_datacall_active`.
+  - Resolve domain with `socket_app_block_dns`.
+  - Create/connect socket via `socket_app_block_create`.
+  - Exchange data up to 20 loops: `socket_app_block_write`, delay 1s, `socket_app_block_read`.
+  - Close socket via `close(socket_fd)`.
+- **Importance**: A complete reference of blocking TCP flow for IoT devices.
 
 ```c
 static void socket_app_block_process(void *argv)
 {
-    // 1. 等待网络注册
+    // 1. Wait for network registration
     qosa_task_sleep_sec(10);
 
-    // 2. 激活 PDP 数据链路
+    // 2. Activate PDP data connection
     if (socket_app_datacall_active() != 0) { return; }
 
-    // 3. DNS 解析服务器域名
+    // 3. DNS resolve server domain
     ret = socket_app_block_dns(SOCKET_BLOCK_CONNECT_SERVER_NAME, remote_ip, INET_ADDRSTRLEN);
     if (ret != 0) { return; }
 
-    // 4. 创建 Socket 并连接服务器
+    // 4. Create socket and connect to server
     socket_fd = socket_app_block_create(remote_ip, SOCKET_BLOCK_CONNECT_SERVER_PORT);
     if (socket_fd == -1) { return; }
 
-    // 5. 循环收发数据（最多 20 次）
+    // 5. Data exchange loop (max 20 times)
     while (1) {
         static int i = 0;
         i++;
@@ -177,19 +169,19 @@ static void socket_app_block_process(void *argv)
         if (ret <= 0) { break; }
     }
 
-    // 6. 关闭 Socket
+    // 6. Close socket
     close(socket_fd);
 }
 ```
 
-#### *socket_app_datacall_active -* PDP 数据链路激活
+#### *socket_app_datacall_active* - Activate PDP data link
 
-- **功能**: 检查并激活蜂窝网络数据连接，为 TCP 通信提供网络基础。
-- 关键操作:
-  - **创建 DataCall 对象**: 调用`qosa_datacall_conn_new`创建指定 SIM 卡和 PDP 的连接对象。
-  - **查询 IP 信息**: 调用`qosa_datacall_get_ip_info`判断 PDP 是否已激活。
-  - **未激活则同步拨号**: 调用`qosa_datacall_start`启动激活，超时 30 秒。
-- **重要性**: TCP 通信必须依赖可用的数据链路，此函数确保网络就绪后才进行后续操作。
+- **Function**: Checks and activates cellular data connection required for TCP communication.
+- Key operations:
+  - Create DataCall object via `qosa_datacall_conn_new`.
+  - Check activation state via `qosa_datacall_get_ip_info`.
+  - If inactive, start activation via `qosa_datacall_start` with 30s timeout.
+- **Importance**: Ensures network is ready before TCP operations.
 
 ```c
 static int socket_app_datacall_active(void)
@@ -205,14 +197,14 @@ static int socket_app_datacall_active(void)
 }
 ```
 
-#### *socket_app_block_dns -* DNS 域名解析
+#### *socket_app_block_dns* - DNS resolution
 
-- **功能**: 通过 DNS 解析将服务器域名转换为点分十进制 IP 地址字符串。
-- 关键操作:
-  - 调用标准 `getaddrinfo` 进行域名解析（IPv4，`SOCK_STREAM`）。
-  - 通过 `inet_ntop` 将二进制地址转为字符串，写入调用方提供的缓冲区。
-  - 解析完成后调用 `freeaddrinfo` 释放结果链表。
-- **重要性**: 将人类可读的域名映射为机器可路由的 IP 地址，是 TCP 连接的前提。
+- **Function**: Resolves domain to dotted-decimal IPv4 string via DNS.
+- Key operations:
+  - Calls `getaddrinfo` (IPv4, `SOCK_STREAM`).
+  - Converts binary address with `inet_ntop`.
+  - Frees result list with `freeaddrinfo`.
+- **Importance**: Required before TCP connect when using domain names.
 
 ```c
 static int socket_app_block_dns(char *hostname, char *ip, qosa_uint32_t ip_len)
@@ -230,14 +222,14 @@ static int socket_app_block_dns(char *hostname, char *ip, qosa_uint32_t ip_len)
 }
 ```
 
-#### *socket_app_block_create -* Socket 创建与连接
+#### *socket_app_block_create* - Socket create and connect
 
-- **功能**: 创建阻塞式 TCP Socket 并同步连接到目标服务器。
-- 关键操作:
-  - 调用标准 `socket(AF_INET, SOCK_STREAM, IPPROTO_IP)` 创建 TCP Socket。
-  - 用 `inet_addr` 和 `htons` 填充 `sockaddr_in` 结构体。
-  - 调用标准 `connect` 进行阻塞式连接；连接失败则关闭 Socket 并返回 -1。
-- **重要性**: 完成 TCP 三次握手，建立与服务器的可靠通信通道。
+- **Function**: Creates a blocking TCP socket and connects to target server.
+- Key operations:
+  - Creates socket via `socket(AF_INET, SOCK_STREAM, IPPROTO_IP)`.
+  - Fills `sockaddr_in` using `inet_addr` and `htons`.
+  - Calls blocking `connect`; on failure, closes socket and returns -1.
+- **Importance**: Establishes the reliable TCP channel.
 
 ```c
 static int socket_app_block_create(const char *remote_ip, qosa_uint16_t port)
@@ -257,13 +249,13 @@ static int socket_app_block_create(const char *remote_ip, qosa_uint16_t port)
 }
 ```
 
-#### *socket_app_block_write -* Socket 数据写入
+#### *socket_app_block_write* - Socket write
 
-- **功能**: 向已连接的 Socket 发送数据。
-- 关键操作:
-  - 调用标准 `write(socket_fd, buf, len)` 发送数据。
-  - 返回实际写入字节数；返回值 ≤ 0 表示写入错误。
-- **重要性**: 实现客户端向服务器的数据发送。
+- **Function**: Sends data through a connected socket.
+- Key operations:
+  - Calls `write(socket_fd, buf, len)`.
+  - Returns actual bytes written; `<= 0` indicates error.
+- **Importance**: Client-to-server data sending.
 
 ```c
 static int socket_app_block_write(int socket_fd, unsigned char *buf, qosa_size_t len)
@@ -275,13 +267,13 @@ static int socket_app_block_write(int socket_fd, unsigned char *buf, qosa_size_t
 }
 ```
 
-#### *socket_app_block_read -* Socket 数据读取
+#### *socket_app_block_read* - Socket read
 
-- **功能**: 从已连接的 Socket 读取服务器响应数据。
-- 关键操作:
-  - 调用标准 `read(socket_fd, buf, len)` 阻塞等待接收数据。
-  - 返回实际读取字节数；返回值 ≤ 0 表示读取错误或连接关闭。
-- **重要性**: 实现客户端从服务器的数据接收，完成双向通信。
+- **Function**: Reads response data from a connected socket.
+- Key operations:
+  - Calls blocking `read(socket_fd, buf, len)`.
+  - Returns actual bytes read; `<= 0` indicates error or closed connection.
+- **Importance**: Server-to-client data receiving.
 
 ```c
 static int socket_app_block_read(int socket_fd, unsigned char *buf, qosa_size_t len)

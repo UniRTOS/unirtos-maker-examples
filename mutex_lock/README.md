@@ -1,88 +1,78 @@
-# 【EG800Z-CN】使用互斥锁访问共享资源
+# [EG800Z-CN] Access Shared Resources with a Mutex
 
-### 项目概述
+## Project Overview
 
-这是一个简易的mutex应用示例，本案例使用移远通信EG800Z-CN开发板和UniRTOS，调用UniRTOS中Mutex相关功能函数编写。让两个任务访问同一共享资源，当访问资源时需获取mutex，确保同一时刻仅有一个任务能够进入受保护的临界区。
+This is a simple mutex example. It uses the Quectel EG800Z-CN development board and UniRTOS mutex APIs. Two tasks access the same shared resource, and each task must lock the mutex before entering the critical section, ensuring only one task accesses the resource at a time.
 
-### 功能特性
+## Features
 
-**高可靠内核级互斥锁机制**
+**Highly reliable kernel-level mutex mechanism**
 
-- **严格互斥访问控制**：确保同一时刻仅有一个任务或线程能够进入受保护的临界区，彻底杜绝多任务并发访问共享资源引发的数据竞争与状态不一致问题。
-- **超时安全退出机制**：提供带超时参数的加锁接口（qosa_mutex_lock），若在指定时间内未能获取锁，则返回错误码，防止任务无限期挂起。
+- **Strict mutual exclusion**: Ensures only one task/thread can enter the protected critical section at any moment, preventing race conditions and inconsistent states.
+- **Timeout-based safe exit**: Provides lock API with timeout (`qosa_mutex_lock`). If lock is not acquired in time, it returns an error code to avoid indefinite blocking.
 
-### 开发准备
+## Development Preparation
 
-#### 硬件要求
+### Hardware Requirements
 
-- EG800Z-CN开发板，[点此购买开发板](https://www.quecmall.com/goods-detail/2c90800b987f06090198aca7bde100a6)。
+- EG800Z-CN development board, [Buy the board here](https://www.quecmall.com/goods-detail/2c90800b987f06090198aca7bde100a6).
 
-​	<img src="./media/开发板实物图.jpg">
+  <img src="./media/开发板实物图.jpg">
 
-- USB数据线（TYPE-C），[点此购买](https://detail.tmall.com/item.htm?abbucket=11&id=712043397690&mi_id=0000UuATUkl2Swill--d8ar3-R828dAfvrmApTj3VzPdxhA&ns=1&priceTId=214783fc17750971433067563e1379&skuId=5825460040081&spm=a21n57.1.hoverItem.4&utparam={"aplus_abtest"%3A"d39c694c59ac1c7b55f24ab87fd2bb30"}&xxc=taobaoSearch)。
+- USB data cable (Type-C), [Buy here](https://detail.tmall.com/item.htm?abbucket=11&id=712043397690&mi_id=0000UuATUkl2Swill--d8ar3-R828dAfvrmApTj3VzPdxhA&ns=1&priceTId=214783fc17750971433067563e1379&skuId=5825460040081&spm=a21n57.1.hoverItem.4&utparam={"aplus_abtest"%3A"d39c694c59ac1c7b55f24ab87fd2bb30"}&xxc=taobaoSearch).
 
-​	<img src="./media/数据线.png">
+  <img src="./media/数据线.png">
 
-## 快速上手
+## Quick Start
 
-### 1. 开发环境搭建
+### 1. Set up the development environment
 
-参考 [UNIRTOS 快速入门](https://docs.quectel.com/zh/UniRTOS/UniRTOS文档/快速上手/快速上手.html) 文档，了解如何搭建开发环境并完成基本开发流程。
+Refer to [UNIRTOS Quick Start](https://docs.quectel.com/zh/UniRTOS/UniRTOS文档/快速上手/快速上手.html).
 
-### 2. 项目结构
+### 2. Project structure
 
 ```text
 mutex_lock/
 ├── main
-  ├── inc               # 存放项目头文件
-    └── include.h       # Demo头文件
-  └── src               # 存放项目源码
-    └── mutex.c         # Demo源代码
-├── media               # README所需媒体文件
-├── menucongfig         # 项目配置的功能选项	
-├── CMakeLists.txt      # Demo构建脚本
-├── env_config.json     # UniRTOS工程环境配置
-└── README.md           # 本文件
+  ├── inc               # Project header files
+    └── mutex.h         # Demo header
+  └── src               # Project source files
+    └── mutex.c         # Demo source code
+├── media               # Media files used by README
+├── menucongfig         # Feature options for project config
+├── CMakeLists.txt      # Demo build script
+├── env_config.json     # UniRTOS environment configuration
+└── README.md           # This file
 ```
 
-### 3. 代码拉取
+### 3. Get the code
 
-新开启一个PowerShell窗口，执行以下命令：
-
-```
-# 拉取示例仓库
+```bash
+# Clone the example repository
 unirtos-cli new -r unirtos-maker-examples
-# 进入该项目
+# Enter this project
 cd unirtos-maker-examples/mutex_lock
 ```
 
-### 4. 构建项目
+### 4. Build the project
 
-拉取编译环境
-
-```
+```bash
 unirtos-cli env-setup
 ```
 
-在 PowerShell 窗口执行固件编译命令（如使用模块型号非EG800ZCN_LA，请替换实际需要编译的型号）：
-
-```
+```bash
 unirtos-cli build -m EG800ZCN_LA -v EG800ZCNLAR01A01_OCPU_20260626
 ```
-
-等待编译结束后，PowerShell 窗口末尾会提示固件编译结果：
 
 ```text
 SUCCESS: Unirtos project built successfully!
 ```
 
-### 5. 硬件连接
+### 5. Hardware connection
 
-使用数据线连接开发板和电脑即可。
+Connect the development board to your PC with a USB cable.
 
-### 6. 日志展示
-
-固件烧录后开机启动，可在日志中看到类似输出：
+### 6. Log output
 
 ```text
 [Mutex DEMO]Enter UniRTOS Mutex DEMO!
@@ -92,20 +82,18 @@ SUCCESS: Unirtos project built successfully!
 [Mutex DEMO]Task B subtract Count: 0
 ```
 
+## Code Overview
 
+### Main Interfaces
 
-## 代码概览
+#### *unir_mutex_demo_init* - Entry and initialization function
 
-### 主要功能接口
-
-#### *unir_mutex_demo_init -* 入口与初始化函数
-
-- **功能**: 这是整个互斥锁演示功能的**入口点**。它的主要职责是创建互斥锁，再启动两个独立任务，用于安全访问共享资源，不阻塞主程序。
-- 关键操作:
-  - **创建互斥锁**: 调用`qosa_mutex_create`创建 `count_mutex`，用于保护共享变量 `share_count`。
-  - **创建任务 A**: 调用`qosa_task_create`创建 `mutex_demo_task_a`，栈大小 4096，普通优先级，执行`unirtos_task_a_handler`。
-  - **创建任务 B**: 调用`qosa_task_create`创建 `mutex_demo_task_b`，栈大小 4096，普通优先级，执行`unirtos_task_b_handler`。
-- **重要性**: 这是用户需要在自己的应用初始化流程中调用的函数，完成互斥锁与任务的启动，是多任务资源保护的标准入口。
+- **Function**: Entry point of the mutex demo. Creates a mutex first, then starts two tasks for safe shared-resource access without blocking the main program.
+- Key operations:
+  - **Create mutex**: Calls `qosa_mutex_create` to create `count_mutex` for protecting shared variable `share_count`.
+  - **Create Task A**: Calls `qosa_task_create` to create `mutex_demo_task_a` (stack 4096, normal priority), running `unirtos_task_a_handler`.
+  - **Create Task B**: Calls `qosa_task_create` to create `mutex_demo_task_b` (stack 4096, normal priority), running `unirtos_task_b_handler`.
+- **Importance**: Standard entry point for resource protection in multitask scenarios.
 
 ```c
 void unir_mutex_demo_init(void)
@@ -129,15 +117,15 @@ void unir_mutex_demo_init(void)
 }
 ```
 
-#### *unirtos_task_a_handler -* 任务 A 处理函数
+#### *unirtos_task_a_handler* - Task A handler
 
-- **功能**: 互斥锁演示任务 A 的**核心逻辑**。循环对共享资源执行**加 1** 操作，通过互斥锁保证原子性与线程安全。
-- 关键操作:
-  - **申请互斥锁**: 调用`qosa_mutex_lock(count_mutex, QOSA_WAIT_FOREVER)`，永久等待直到获取锁。
-  - **操作共享资源**: 对 `share_count` 执行 `++`。
-  - **释放互斥锁**: 调用`qosa_mutex_unlock(count_mutex)`，让其他任务可以使用资源。
-  - **任务延时**: 调用`qosa_task_sleep_ms(100)`模拟业务处理。
-- **重要性**: 展示**读-改-写**类共享资源如何正确加锁、操作、解锁，防止数据竞争。
+- **Function**: Core logic of Task A. Repeatedly increments the shared resource with mutex protection for atomicity and thread safety.
+- Key operations:
+  - Lock via `qosa_mutex_lock(count_mutex, QOSA_WAIT_FOREVER)`.
+  - Increment `share_count`.
+  - Unlock via `qosa_mutex_unlock(count_mutex)`.
+  - Sleep 100 ms via `qosa_task_sleep_ms(100)`.
+- **Importance**: Demonstrates the correct lock-modify-unlock pattern.
 
 ```c
 static void unirtos_task_a_handler(void *arg)
@@ -155,15 +143,15 @@ static void unirtos_task_a_handler(void *arg)
 }
 ```
 
-#### *unirtos_task_b_handler -* 任务 B 处理函数
+#### *unirtos_task_b_handler* - Task B handler
 
-- **功能**: 互斥锁演示任务 B 的**核心逻辑**。循环对共享资源执行**减 1** 操作，与任务 A 竞争同一把锁，验证互斥机制。
-- 关键操作:
-  - **申请互斥锁**: 调用`qosa_mutex_lock(count_mutex, QOSA_WAIT_FOREVER)`，永久等待直到获取锁。
-  - **操作共享资源**: 对 `share_count` 执行 `--`。
-  - **释放互斥锁**: 调用`qosa_mutex_unlock(count_mutex)`。
-  - **任务延时**: 调用`qosa_task_sleep_ms(150)`模拟业务处理。
-- **重要性**: 与任务 A 形成**竞争场景**，直观体现互斥锁防止多任务并发冲突的作用。
+- **Function**: Core logic of Task B. Repeatedly decrements the shared resource and competes for the same mutex with Task A.
+- Key operations:
+  - Lock via `qosa_mutex_lock(count_mutex, QOSA_WAIT_FOREVER)`.
+  - Decrement `share_count`.
+  - Unlock via `qosa_mutex_unlock(count_mutex)`.
+  - Sleep 150 ms via `qosa_task_sleep_ms(150)`.
+- **Importance**: Together with Task A, it demonstrates how mutex prevents concurrent conflicts.
 
 ```c
 static void unirtos_task_b_handler(void *arg)

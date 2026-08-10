@@ -21,7 +21,7 @@
 #include "qosa_platform_cfg.h"
 #include "qosa_ip_addr.h"
 #include "qosa_event_notify.h"
-#include "include.h"
+#include "datacall.h"
 #include "unirtos_app_init_registry.h"
 
 #define QOS_LOG_TAG    LOG_TAG_DEMO
