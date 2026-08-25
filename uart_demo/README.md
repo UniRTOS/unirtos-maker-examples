@@ -1,5 +1,7 @@
 # [EG800Z-CN] Simple UART Echo Communication
 
+[中文说明](README_ZH.md)
+
 ## Project Overview
 
 This is a basic UART protocol example for beginners. It uses the Quectel EG800Z-CN development board and UniRTOS UART APIs to implement UART echo: whatever the serial tool sends to the board is sent back unchanged.

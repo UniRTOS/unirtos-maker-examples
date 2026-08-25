@@ -1,5 +1,7 @@
 # [EG800Z-CN] Quickly Connect to Cellular Network
 
+[中文说明](README_ZH.md)
+
 ## Project Overview
 
 This example uses the Quectel EG800Z-CN development board and UniRTOS. By calling data-call related UniRTOS APIs, the board quickly connects to the cellular network and obtains an IP address.

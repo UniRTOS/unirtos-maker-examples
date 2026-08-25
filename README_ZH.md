@@ -1,5 +1,7 @@
 # UniRTOS-Maker-Examples
 
+[English](README.md)
+
 UniRTOS 官方创客案例仓库，汇聚移远通信官网 UniRTOS 板块对外开源的大部分创客案例源码，旨在为广大开发者、创客群体提供可直接参考、复用的实战级代码示例。
 
 ## 仓库简介
@@ -19,3 +21,16 @@ UniRTOS是移远通信自主开发并持续维护的开发框架，以统一公�
 ## 快速导航
 
 如需查看移远官网 UniRTOS 板块原版案例文档或更多资源, 请访问移远通信官网开发者栏中的UniRTOS板块
+
+## 示例支持情况
+
+所有示例均已在EG800Z-CN模块上验证。每个示例均提供中文和英文文档。
+
+- [开机原因](boot_reason/)：模块重启后获取开机原因。
+- [数据业务](datacall/)：快速连接蜂窝网络。需要可用的 SIM 卡。
+- [LED GPIO](led_gpio/)：使用 GPIO 驱动 LED 灯。需要 LED 模块。
+- [多线程](Multithreading/)：创建和使用多个线程。
+- [互斥锁](mutex_lock/)：使用互斥锁访问共享资源。
+- [短信发送](sms_send/)：发送短信。需要可用的 SIM 卡。
+- [TCP 示例](tcp_demo/)：运行 TCP 客户端。需要可用的 SIM 卡。
+- [UART 示例](uart_demo/)：实现简单的 UART 通信回显。需要 USB-TTL CH340 模块。

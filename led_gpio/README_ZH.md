@@ -1,5 +1,7 @@
 # UniRTOS ：使用GPIO驱动LED灯
 
+[English](README.md)
+
 本案例基于EG800Z-CN开发板和UniRTOS实现，通过调用GPIO相关功能函数，控制GPIO引脚对应的输出电平，使其每1 s 翻转一次电平，从而让LED模块达到灯光闪烁的视觉效果。
 
 ## 功能特性

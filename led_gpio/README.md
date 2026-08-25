@@ -1,5 +1,7 @@
 # UniRTOS: Drive an LED with GPIO
 
+[中文说明](README_ZH.md)
+
 This example is implemented on the EG800Z-CN development board with UniRTOS. By calling GPIO APIs, it controls the GPIO output level and toggles the pin every 1 second, producing an LED blinking effect.
 
 ## Features

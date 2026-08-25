@@ -1,5 +1,7 @@
 # 【EG800Z-CN】TCP 客户端示例
 
+[English](README.md)
+
 ### 项目概述
 
 本案例使用移远通信EG800Z-CN开发板和UniRTOS，调用UniRTOS中Socket相关功能函数编写。让开发板成为TCP客户端，远程连接其他TCP服务器，进行数据交互。

@@ -1,5 +1,7 @@
 # 【EG800Z-CN】发送短信示例
 
+[English](README.md)
+
 ### 项目概述
 
 这是一个基础的SMS协议应用，本案例使用移远通信EG800Z-CN开发板和UniRTOS，通过调用UniRTOS中SMS相关功能函数，让开发板能向其他SIM卡发送短信，实现远程通知功能。

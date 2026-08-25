@@ -1,5 +1,7 @@
 # 【EG800Z-CN】快速连接蜂窝网络
 
+[English](README.md)
+
 ### 项目概述
 
 本案例使用移远通信EG800Z-CN开发板和UniRTOS，通过调用UniRTOS中注网相关的功能函数，让开发板快速连接蜂窝网络，获取IP地址。

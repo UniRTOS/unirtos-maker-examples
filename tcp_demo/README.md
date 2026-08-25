@@ -1,5 +1,7 @@
 # [EG800Z-CN] TCP Client Example
 
+[中文说明](README_ZH.md)
+
 ## Project Overview
 
 This example uses the Quectel EG800Z-CN development board and UniRTOS Socket APIs. It makes the board act as a TCP client, connecting to a remote TCP server for data interaction.

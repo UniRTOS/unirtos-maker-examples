@@ -1,5 +1,7 @@
 # [EG800Z-CN] Multithreading Example
 
+[中文说明](README_ZH.md)
+
 ## Project Overview
 
 This example uses the Quectel EG800Z-CN development board and UniRTOS to implement a simple concurrent program. It creates two threads that print different content, demonstrating the effect of multitask "simultaneous" execution.

@@ -1,5 +1,7 @@
 # [EG800Z-CN] Access Shared Resources with a Mutex
 
+[中文说明](README_ZH.md)
+
 ## Project Overview
 
 This is a simple mutex example. It uses the Quectel EG800Z-CN development board and UniRTOS mutex APIs. Two tasks access the same shared resource, and each task must lock the mutex before entering the critical section, ensuring only one task accesses the resource at a time.

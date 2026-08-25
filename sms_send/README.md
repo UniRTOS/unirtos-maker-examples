@@ -1,5 +1,7 @@
 # [EG800Z-CN] SMS Sending Example
 
+[中文说明](README_ZH.md)
+
 ## Project Overview
 
 This is a basic SMS protocol example. It uses the Quectel EG800Z-CN development board and UniRTOS SMS APIs, allowing the board to send SMS messages to other SIM cards for remote notification.

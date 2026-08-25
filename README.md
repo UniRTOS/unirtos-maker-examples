@@ -1,5 +1,7 @@
 # UniRTOS-Maker-Examples
 
+[中文说明](README_ZH.md)
+
 The official maker case repository for UniRTOS, aggregating most of the open-source maker case source codes from the UniRTOS section on Quectel's official website. It aims to provide developers and makers with production-level code examples that can be directly referenced and reused.
 
 ## Repository Introduction
@@ -19,3 +21,16 @@ If these cases are helpful to your UniRTOS development work, feel free to star t
 ## Quick Navigation
 
 For the original case documentation or more resources from the UniRTOS section on Quectel's official website, please visit the UniRTOS section under the Developer column on Quectel's official website.
+
+## Example Support
+
+All examples are verified for EG800Z-CN development Module. Each example includes English and Chinese documentation.
+
+- [Boot Reason](boot_reason/): Get the boot reason after a module restart. 
+- [Data Call](datacall/): Quickly connect to a cellular network. requires an available SIM card.
+- [LED GPIO](led_gpio/): Drive an LED with GPIO. requires an LED module.
+- [Multithreading](Multithreading/): Create and use multiple threads. 
+- [Mutex Lock](mutex_lock/): Access shared resources with a mutex. 
+- [SMS Send](sms_send/): Send SMS messages. requires an available SIM card.
+- [TCP Demo](tcp_demo/): Run a TCP client. requires an available SIM card.
+- [UART Demo](uart_demo/): Implement simple UART echo communication. requires a USB-TTL CH340 module.

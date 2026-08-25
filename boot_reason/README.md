@@ -1,5 +1,7 @@
 # [EG800Z-CN] How to Get the Boot Reason After Module Restart
 
+[中文说明](README_ZH.md)
+
 ## Project Overview
 
 This is a simple example that shows how to obtain the module boot reason. During development, module restarts may happen occasionally. By checking the boot reason, you can quickly identify why an abnormal restart occurred, which is very helpful for debugging. This example uses the Quectel EG800Z-CN development board and UniRTOS, and displays the boot reason through EPAT logs.
