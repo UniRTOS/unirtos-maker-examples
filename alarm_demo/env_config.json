@@ -1,0 +1,12 @@
+{
+  "unirtos_root": "",
+  "build": {
+    "module": "EG800ZEU_LH"
+  },
+  "sdk": {
+    "version": "1.0.5"
+  },
+  "libraries": {
+    "list": []
+  }
+}
