@@ -44,7 +44,7 @@
 # 拉取示例仓库
 unirtos-cli new -r unirtos-maker-examples
 # 进入该项目
-cd unirtos-maker-examples/alarm_demo
+cd unirtos-maker-examples/emergency_call_alarm
 ```
 
 ### 修改配置参数

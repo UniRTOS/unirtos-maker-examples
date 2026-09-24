@@ -45,7 +45,7 @@ Open a new PowerShell window and run the following commands:
 # Pull the example repository
 unirtos-cli new -r unirtos-maker-examples
 # Enter the project directory
-cd unirtos-maker-examples/alarm_demo
+cd unirtos-maker-examples/emergency_call_alarm
 ```
 
 ### Modifying Configuration Parameters

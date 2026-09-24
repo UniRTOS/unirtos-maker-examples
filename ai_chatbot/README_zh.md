@@ -45,7 +45,7 @@ AI聊天机器人方案是一个基于UniRTOS与Coze平台构建的智能语音�
 
 ```PowerShell
 unirtos-cli new -r unirtos-maker-examples
-cd unirtos-maker-examples/chat_bot
+cd unirtos-maker-examples/ai_chatbot
 ```
 
 ### 修改配置参数
