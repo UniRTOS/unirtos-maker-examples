@@ -54,7 +54,7 @@ cd unirtos-maker-examples/alarm_demo
 
 Configure the cloud platform parameters in *alarm_config.h*. For creating an Alibaba Cloud platform product and obtaining parameters, refer to the [documentation](https://www.quectel.com.cn/unirtos/docs?docs_page=应用开发指南/云平台对接/AliYun平台/AliYun平台.html).
 
-<img src="./media/ali1.png" alt="img" style="zoom:75%;" />
+<img src="./media/ali1_en.png" alt="img" style="zoom:95%;" />
 
 **Contact information configuration**
 
