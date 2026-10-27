@@ -22,11 +22,11 @@ MQTT 发布订阅 + JSON 远程指令解析示例
 ### 硬件要求
 - EG800Z-CN开发板，[点此购买开发板](https://www.quecmall.com/goods-detail/2c90800b987f06090198aca7bde100a6)。
 
-​   <img src="./media/开发板实物图.jpg">
+​   <img src="./media/DevelopmentBoard.jpg">
 
 - USB数据线（TYPE-C），[点此购买](https://detail.tmall.com/item.htm?abbucket=11&id=712043397690&mi_id=0000UuATUkl2Swill--d8ar3-R828dAfvrmApTj3VzPdxhA&ns=1&priceTId=214783fc17750971433067563e1379&skuId=5825460040081&spm=a21n57.1.hoverItem.4&utparam={"aplus_abtest"%3A"d39c694c59ac1c7b55f24ab87fd2bb30"}&xxc=taobaoSearch)。
 
-​   <img src="./media/数据线.png">
+​   <img src="./media/UsbCable.png">
 
 - 可用SIM卡（支持蜂窝数据上网，已开通流量）
 
@@ -129,100 +129,6 @@ void unir_mqtt_demo_init(void)
     - 打开MQTT客户端，建立TCP连接
     - 事件分发：open / connect / publish / subscribe / disconnect / 收到下行json消息 等事件
     - 解析JSON下行指令，控制定时器、订阅、退订动作
-```c
-static void unir_mqtt_demo_task(void *argv)
-{
-    int ret = 0;
-    mqtt_demo_msg_t msg = {0};
-    qcm_mqtt_client_info_t info = {0};
-    QOSA_UNUSED(argv);
 
-    qosa_task_sleep_sec(10);
-    ret = unir_mqtt_demo_open();
-    if (ret != 0)
-    {
-        goto exit;
-    }
-
-    g_mqtt_ctx->publish_count = 0;
-    if (qosa_timer_create(&g_mqtt_ctx->publish_timer, unir_mqtt_publish_timer_cb, &g_mqtt_ctx->publish_count) != QOSA_OK)
-    {
-        QLOGE("[mqtt_demo] Failed to create publish timer\n");
-        goto exit;
-    }
-
-    while (1)
-    {
-        qosa_memset(&msg, 0, sizeof(mqtt_demo_msg_t));
-        qosa_msgq_wait(g_mqtt_ctx->msgq, (qosa_uint8_t *)&msg, sizeof(mqtt_demo_msg_t), QOSA_WAIT_FOREVER);
-        QLOGD("[mqtt_demo] msg_id=%d", msg.msg_id);
-
-        switch (msg.msg_id)
-        {
-            case QCM_MQTT_CLIENT_OPEN_EVENT:
-                ret = unir_mqtt_demo_event_handle(&msg);
-                break;
-            case QCM_MQTT_CLIENT_CONNECT_EVENT:
-                ret = unir_mqtt_demo_event_handle(&msg);
-                break;
-            case QCM_MQTT_CLIENT_PUBLISH_EVENT:
-                ret = unir_mqtt_demo_event_handle(&msg);
-                break;
-            case QCM_MQTT_CLIENT_SUBSCRIBE_EVENT:
-                ret = unir_mqtt_demo_event_handle(&msg);
-                break;
-            case QCM_MQTT_CLIENT_SUBACK_EVENT:
-                ret = unir_mqtt_demo_event_handle(&msg);
-                break;
-            case QCM_MQTT_CLIENT_UNSUBSCRIBE_EVENT:
-                ret = unir_mqtt_demo_event_handle(&msg);
-                break;
-            case QCM_MQTT_CLIENT_UNSUBACK_EVENT:
-                ret = unir_mqtt_demo_event_handle(&msg);
-                break;
-            case QCM_MQTT_CLIENT_NEW_MESSAGE_EVENT:
-                unir_mqtt_demo_recv_new_message(&msg);
-                break;
-            case QCM_MQTT_CLIENT_STATE_EVENT:
-                ret = unir_mqtt_demo_event_handle(&msg);
-                break;
-            case QCM_MQTT_CLIENT_DISCONNECT_EVENT:
-                ret = unir_mqtt_demo_event_handle(&msg);
-                break;
-            case QCM_MQTT_CLIENT_CLOSE_EVENT:
-                ret = unir_mqtt_demo_event_handle(&msg);
-                break;
-            case MQTT_CLIENT_TIMER_PUBLISH_EVENT:
-                unir_mqtt_demo_timer_publish(&msg);
-                break;
-            default:
-                break;
-        }
-
-        qosa_memset(&info, 0, sizeof(qcm_mqtt_client_info_t));
-        qcm_mqtt_client_get_state_info(g_mqtt_ctx->client_id, &info);
-        QLOGD("[mqtt_demo] state=%d", info.client_state);
-
-        if (info.client_state == QCM_MQTT_STATE_TCP_CLOSING || info.client_state == QCM_MQTT_STATE_MQTT_DISCONNECTING)
-        {
-            unir_mqtt_demo_close();
-        }
-
-        if (info.client_state == QCM_MQTT_STATE_TCP_CLOSED || info.client_state == QCM_MQTT_STATE_INIT)
-        {
-            goto exit;
-        }
-
-        if (ret != 0)
-        {
-            goto exit;
-        }
-    }
-
-exit:
-    QLOGV("[mqtt_demo] end");
-    unir_mqtt_demo_ctx_free();
-}
-```
 ## 注意事项
 1. 弱网环境下模组搜网、附着耗时变长，若等待时间后网络仍未就绪，会激活失败，无法进行连接通信。
