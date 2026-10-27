@@ -34,3 +34,5 @@ UniRTOS是移远通信自主开发并持续维护的开发框架，以统一公�
 - [短信发送](sms_send/)：发送短信。需要可用的 SIM 卡。
 - [TCP 示例](tcp_demo/)：运行 TCP 客户端。需要可用的 SIM 卡。
 - [UART 示例](uart_demo/)：实现简单的 UART 通信回显。需要 USB-TTL CH340 模块。
+- [HTTPS 获取天气示例](https_get_weather/):获取网络天气并打印。需要可用的SIM卡。
+- [MQTT 示例](mqtt_demo/):PC通过Mqtt控制开发板。需要可用的SIM卡。

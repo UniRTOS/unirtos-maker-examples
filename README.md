@@ -34,3 +34,5 @@ All examples are verified for EG800Z-CN development Module. Each example include
 - [SMS Send](sms_send/): Send SMS messages. requires an available SIM card.
 - [TCP Demo](tcp_demo/): Run a TCP client. requires an available SIM card.
 - [UART Demo](uart_demo/): Implement simple UART echo communication. requires a USB-TTL CH340 module.
+- [HTTPS Get Weather](https_get_weather/): Obtain and print the online weather information. An available SIM card is required.
+- [MQTT Demo](mqtt_demo/)： The PC controls the development board via MQTT. An available SIM card is necessary.
