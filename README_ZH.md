@@ -42,6 +42,8 @@ UniRTOS是移远通信自主开发并持续维护的开发框架，以统一公�
 - [紧急呼叫报警器](emergency_call_alarm/README_zh.md)：发送报警短信并轮流拨打紧急联系人。
 - [小屏多功能演示](small_screen_demo/README_zh.md)：在圆形触摸屏上运行表盘和交互小工具。
 - [语音聊天机器人](voice_chatbot/README_zh.md)：基于 Coze 实现语音对话和端侧工具调用。
+- [HTTPS 获取天气示例](https_get_weather/README_zh.md):获取网络天气并打印。需要可用的SIM卡。
+- [MQTT 示例](mqtt_demo/README_zh.md):PC通过Mqtt控制开发板。需要可用的SIM卡。
 
 ## 社区与支持
 

@@ -42,6 +42,8 @@ The basic examples target the EG800Z-CN module. Application demos have specific 
 - [Emergency Call Alarm](emergency_call_alarm/README.md): Send alarm SMS messages and call emergency contacts in rotation.
 - [Small Screen Demo](small_screen_demo/README.md): Run a clock face and interactive tools on a circular touch screen.
 - [Voice Chatbot](voice_chatbot/README.md): Build a Coze-based voice assistant with on-device tool calling.
+- [HTTPS Get Weather](https_get_weather/README.md): Obtain and print the online weather information. An available SIM card is required.
+- [MQTT Demo](mqtt_demo/README.md)： The PC controls the development board via MQTT. An available SIM card is necessary.
 
 ## Community & Support
 
