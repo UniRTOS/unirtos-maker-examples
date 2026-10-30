@@ -46,7 +46,7 @@ The basic examples target the EG800Z-CN module. Application demos have specific 
 - [MQTT Demo](mqtt_demo/README.md)： The PC controls the development board via MQTT. An available SIM card is necessary.
 - [4G USB Dongle](4g_donlg/README.md): Share a cellular connection over USB with a local management page. Requires a data-enabled SIM card and a USB data cable.
 - [E-Paper Price Tags](e-ink_screen/README.md): Display information for six products on an e-paper screen, with full-screen refresh and deep sleep support. Requires a 7.5-inch V2 monochrome e-paper screen and a compatible driver board.
-- [Large Screen Gateway](Large_Screen/README.md): Use LVGL to build touch interfaces for agriculture, industry, and smart home scenarios. Requires an ST7796S LCD and an FT6336 capacitive touch component.
+- [Large Screen Gateway](large_screen/README.md): Use LVGL to build touch interfaces for agriculture, industry, and smart home scenarios. Requires an ST7796S LCD and an FT6336 capacitive touch component.
 
 ## Community & Support
 

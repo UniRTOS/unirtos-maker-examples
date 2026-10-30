@@ -46,7 +46,7 @@ UniRTOS是移远通信自主开发并持续维护的开发框架，以统一公�
 - [MQTT 示例](mqtt_demo/README_zh.md):PC通过Mqtt控制开发板。需要可用的SIM卡。
 - [4G USB 上网卡](4g_donlg/README_zh.md)：共享网络，本地管理页面。需要可上网的 SIM 卡
 - [墨水屏电子价签](e-ink_screen/README_zh.md)：在墨水屏上展示六种商品的信息。需要 7.5 英寸 V2 单色墨水屏及配套驱动板。
-- [大屏网关](Large_Screen/README.zh.md)：基于 LVGL 实现农业、工业和智能家居多场景触摸界面。
+- [大屏网关](large_screen/README.zh.md)：基于 LVGL 实现农业、工业和智能家居多场景触摸界面。
 
 ## 社区与支持
 
