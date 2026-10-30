@@ -60,10 +60,9 @@
 #define CHATBOT_AUDIO_FRAME_B64_MAX  ((((CHATBOT_AUDIO_FRAME_BYTES + 2) / 3) * 4) + 16)
 /*!< 上行音频事件 JSON 帧缓冲区大小（Base64 数据 + JSON 包裹字符） */
 #define CHATBOT_AUDIO_UPLINK_JSON_MAX (CHATBOT_AUDIO_FRAME_B64_MAX + 96)
-/*!< mic 软件增益（VOICE 模式对上行 PCM 统一放大后做 VAD + 上传）：
-     原始 mic 能量偏低，远低于 VAD 起声阈值，按键方案不受影响，但 VAD 方案会"说话无反应"。
-     参考实现同样用软件增益(VOICE_MIC_SOFT_GAIN)。默认 8×，
-     若削波(说话音量大时)可下调，若仍不够可上调。仅作用于 VOICE 会话上行。 */
+/*!< mic 软件增益（VOICE 模式对上行 PCM 统一放大后上传）：
+     原始 mic 能量偏低，远低于服务端 server_vad 的起声门限，会表现为"说话无反应"。
+     默认 8x，若削波(说话音量大时)可下调，若仍不够可上调。仅作用于 VOICE 会话上行。 */
 #define CHATBOT_VOICE_MIC_SOFT_GAIN  8
 
 /*音频播放音量大小0~11*/
@@ -83,6 +82,22 @@
 #define CHATBOT_COZE_CLIENT_ID       0
 #define CHATBOT_COZE_CONN_TIMEOUT_MS 30000
 #define CHATBOT_COZE_PING_INTERVAL_S 30
+
+/* ---- server_vad（云端语音活动检测，VOICE 语音模式使用）参数 ---- */
+/*!< VAD 检测到语音之前额外包含的音频量（ms），用于保留起声前的音节，默认 600。
+     设备侧不再做任何起声回溯缓存（旧本地 VAD 的 preroll 已删除），全部交由服务端补偿。 */
+#define CHATBOT_COZE_VAD_PREFIX_PADDING_MS    600
+/*!< 判定"用户停止说话"所需的静音持续时间（ms），官方默认 500，本工程取 800。
+     上调原因：本板无 AEC，喇叭 TTS 回声会被服务端 VAD 拾取，较短的静音窗会让
+     服务端在用户字间停顿处过早判定"说完"，进而打断并重启一轮。 */
+#define CHATBOT_COZE_VAD_SILENCE_DURATION_MS  800
+
+/* ---- 打断（barge-in）本地处理参数 ---- */
+/*!< 打断后"丢弃在途旧回复残余帧"的窗口长度（ms）。窗口到点自动过期，
+     不依赖任何服务端事件解除，从结构上避免"永久静音"死锁。 */
+#define CHATBOT_BARGEIN_DROP_WINDOW_MS        2000
+/*!< 两次打断清尾之间的最小间隔（ms），抑制回声反复触发造成的回复断续。 */
+#define CHATBOT_BARGEIN_FLUSH_COOLDOWN_MS     1000
 
 /* ============================== Coze 下行音频限流（抑制服务端突发下发）============================== */
 /*!< 服务端下行音频限流开关。1 = 在 chat.update 的 output_audio.pcm_config 中携带官方字段

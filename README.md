@@ -20,19 +20,34 @@ If these cases are helpful to your UniRTOS development work, feel free to star t
 
 ## Quick Navigation
 
-For the original case documentation or more resources from the UniRTOS section on Quectel's official website, please visit the UniRTOS section under the Developer column on Quectel's official website.
+For the original case documentation and more resources, visit the [UniRTOS section on Quectel's official website](https://www.quectel.com.cn/unirtos/unirtos).
+
+- [Quick Start](https://www.quectel.com.cn/unirtos/quick-start): Set up the development environment and run your first project.
+- [Documentation Center](https://www.quectel.com.cn/unirtos/document_center): Browse development guides and API documentation.
+- [Maker Cases](https://www.quectel.com.cn/unirtos/maker_cases): Find the original maker case tutorials.
+- [Developer Resources](https://www.quectel.com.cn/unirtos/developer-resources): Download SDKs, firmware, drivers, and tools.
 
 ## Example Support
 
-All examples are verified for EG800Z-CN development Module. Each example includes English and Chinese documentation.
+The basic examples target the EG800Z-CN module. Application demos have specific module variants and peripheral requirements; check each example's documentation before building or wiring hardware. All 11 examples include English and Chinese documentation; the links below open the English guides.
 
-- [Boot Reason](boot_reason/): Get the boot reason after a module restart. 
-- [Data Call](datacall/): Quickly connect to a cellular network. requires an available SIM card.
-- [LED GPIO](led_gpio/): Drive an LED with GPIO. requires an LED module.
-- [Multithreading](Multithreading/): Create and use multiple threads. 
-- [Mutex Lock](mutex_lock/): Access shared resources with a mutex. 
-- [SMS Send](sms_send/): Send SMS messages. requires an available SIM card.
-- [TCP Demo](tcp_demo/): Run a TCP client. requires an available SIM card.
-- [UART Demo](uart_demo/): Implement simple UART echo communication. requires a USB-TTL CH340 module.
-- [HTTPS Get Weather](https_get_weather/): Obtain and print the online weather information. An available SIM card is required.
-- [MQTT Demo](mqtt_demo/)： The PC controls the development board via MQTT. An available SIM card is necessary.
+- [Boot Reason](boot_reason/README.md): Get the boot reason after a module restart.
+- [Data Call](datacall/README.md): Quickly connect to a cellular network. Requires an available SIM card.
+- [LED GPIO](led_gpio/README.md): Drive an LED with GPIO. Requires an LED module.
+- [Multithreading](Multithreading/README.md): Create and use multiple threads.
+- [Mutex Lock](mutex_lock/README.md): Access shared resources with a mutex.
+- [SMS Send](sms_send/README.md): Send SMS messages. Requires an available SIM card.
+- [TCP Demo](tcp_demo/README.md): Run a TCP client. Requires an available SIM card.
+- [UART Demo](uart_demo/README.md): Implement simple UART echo communication. Requires a USB-TTL CH340 module.
+- [Emergency Call Alarm](emergency_call_alarm/README.md): Send alarm SMS messages and call emergency contacts in rotation.
+- [Small Screen Demo](small_screen_demo/README.md): Run a clock face and interactive tools on a circular touch screen.
+- [Voice Chatbot](voice_chatbot/README.md): Build a Coze-based voice assistant with on-device tool calling.
+- [HTTPS Get Weather](https_get_weather/README.md): Obtain and print the online weather information. An available SIM card is required.
+- [MQTT Demo](mqtt_demo/README.md)： The PC controls the development board via MQTT. An available SIM card is necessary.
+
+## Community & Support
+
+- [UniRTOS Community](https://forumschinese.quectel.com/c/66-category/66): Ask questions and share projects in the official forum (Chinese).
+- [Quectel Forums](https://forums.quectel.com/): Discuss Quectel modules in English.
+- [Report an Issue](https://github.com/UniRTOS/unirtos-maker-examples/issues): Report code or documentation problems with reproduction steps.
+- [Contribute a Fix or Example](https://github.com/UniRTOS/unirtos-maker-examples/pulls): Submit a pull request with a summary and verification results.

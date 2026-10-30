@@ -52,8 +52,8 @@ typedef enum
     CHAT_EVT_WS_CONNECTED,        /*!< 通信层：Coze 会话建立成功（对应 chat.created） */
     CHAT_EVT_WS_CONNECT_FAILED,   /*!< 通信层：Coze 会话建立失败 */
     CHAT_EVT_WS_DISCONNECTED,     /*!< 通信层：Coze 会话断开 */
-    CHAT_EVT_SPEECH_STARTED,      /*!< 通信层：收到服务端 speech_started（仅 server_vad 模式会下发；本工程 client_interrupt 下不触发，保留兜底） */
-    CHAT_EVT_SPEECH_STOPPED,      /*!< 通信层：收到服务端 speech_stopped（仅 server_vad 模式会下发；本工程 client_interrupt 下不触发，保留兜底） */
+    CHAT_EVT_SPEECH_STARTED,      /*!< 通信层：收到服务端 speech_started（VOICE/server_vad 模式下发，表示用户起声） */
+    CHAT_EVT_SPEECH_STOPPED,      /*!< 通信层：收到服务端 speech_stopped（VOICE/server_vad 模式下发，表示用户说完） */
     CHAT_EVT_SERVER_TEXT,         /*!< 通信层：收到云端文本/字幕事件 */
     CHAT_EVT_CHAT_COMPLETED,      /*!< 通信层：一轮对话完成 */
     CHAT_EVT_TOOL_CALL_REQUEST,   /*!< 通信层：收到云端工具调用请求 */

@@ -331,6 +331,7 @@ static void chat_core_task_process(void *ctx)
  */
 int chat_core_init(void)
 {
+    if (chat_bus_init() != 0)
     {
         QLOGE("[chat_core] chat bus init failed");
         return -1;

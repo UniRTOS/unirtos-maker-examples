@@ -1,5 +1,7 @@
 # Emergency Call Alarm
 
+[中文](README_zh.md)
+
 The emergency call alarm solution is an emergency alert and help notification solution built on UniRTOS.
 
 With UniRTOS as the core runtime platform, this project combines button triggering, voice wake-up, SMS notification, and a multi-contact dialing rotation mechanism to perform alarm triggering, contact notification, and emergency help message delivery on the Quectel EG800Z module. The system supports two alarm methods, button triggering and voice wake-up; after the alarm is triggered, an alarm SMS can be sent automatically to all emergency contacts. It also supports configuring multiple emergency contacts: when dialing the first contact fails, the system automatically rotates to the next contact until the notification is completed. Relying on the API-rich UniRTOS, the solution has good cross-module adaptability, making it easy to run on different Quectel modules. It is suitable for scenarios such as portable emergency alarms, elderly care, personal safety protection, and rapid integration with Quectel modules.

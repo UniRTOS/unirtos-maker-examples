@@ -72,6 +72,8 @@
 #define COZE_FIELD_FRAME_SIZE_MS          "frame_size_ms"
 #define COZE_FIELD_TURN_DETECTION         "turn_detection"
 #define COZE_FIELD_TYPE                   "type"
+#define COZE_FIELD_PREFIX_PADDING_MS      "prefix_padding_ms"
+#define COZE_FIELD_SILENCE_DURATION_MS    "silence_duration_ms"
 #define COZE_FIELD_EVENT_SUBSCRIPTIONS    "event_subscriptions"
 #define COZE_FIELD_NEED_PLAY_PROLOGUE     "need_play_prologue"
 #define COZE_FIELD_PROLOGUE_CONTENT       "prologue_content"
@@ -95,11 +97,12 @@
 #define COZE_AUDIO_CODEC_PCM              "pcm"
 /*!< g711a 编码要求 format 仍填 pcm（官方文档：codec 为 g711a/g711u 时 format 请设置为 pcm） */
 #define COZE_AUDIO_CODEC_G711A            "g711a"
-/*!< 端点检测方式：本工程实际使用 client_interrupt（客户端控制语音开始/结束）——
-     BUTTON 模式 = 按键 PTT；VOICE 模式 = 设备侧本地 vad_lite 判定语音起止，检测到
-     SPEECH_END 才发 input_audio_buffer.complete。不使用 server_vad（服务端 VAD）,
-     server_vad 模式下 complete 事件无效且打断依赖服务端 speech_started 下行。
-     常量保留作参考。 */
+/*!< 端点检测方式：按会话模式选择——
+     VOICE 语音模式 = server_vad（云端 VAD）：设备侧持续上传音频、不做任何本地语音
+       活动检测，由服务端判定用户说话起止并下发 speech_started / speech_stopped；
+       该模式下 input_audio_buffer.complete / clear 均无效，打断由服务端自动完成。
+     BUTTON 按键模式 = client_interrupt（客户端控制语音开始/结束）：按下上传、
+       松开发 input_audio_buffer.complete，打断由设备侧发 conversation.chat.cancel。 */
 #define COZE_TURN_DETECTION_SERVER_VAD    "server_vad"
 #define COZE_TURN_DETECTION_CLIENT_INTERRUPT "client_interrupt"
 

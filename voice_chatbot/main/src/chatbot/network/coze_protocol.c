@@ -17,41 +17,11 @@
 #include "chat_bus.h"
 
 /*!< 服务端是否有一轮对话正在进行（conversation.chat.created/in_progress 置真；
-     completed/failed/canceled 置假）。coze_audio_task 用它在按下 PTT / VAD 起声时
-     决定是否需要发 conversation.chat.cancel 打断——若 AI 空闲也发 cancel，
-     服务端会把当前会话模型终止，导致同连接后续新 chat 报 model has been terminated。 */
+     completed/failed/canceled 置假）。按键 PTT 模式下 coze_audio_task 用它决定
+     按下按键时是否需要发 conversation.chat.cancel 打断——若 AI 空闲也发 cancel，
+     服务端会把当前会话模型终止，导致同连接后续新 chat 报 model has been terminated。
+     VOICE（server_vad）模式不使用该判定：打断由服务端自动完成，设备侧不发 cancel。 */
 static volatile qosa_bool_t s_chat_busy = QOSA_FALSE;
-
-/*!< 打断 cancel 确认门控：本地已发 conversation.chat.cancel、但服务端尚未返回
-     conversation.chat.canceled 确认期间置真。cancel 发出后服务端仍会把残余旧回答连同
-     其新句子继续下发数秒，直到回 canceled 才停。若此时把 sentence_start 误判为"新一轮开始"
-     而解除下行静音门控，残余旧回答会在用户说完话后继续被播完。因此在收到 canceled
-     （或一轮自然结束/新一轮开始）之前，sentence_start 一律不得解除 muted。 */
-static volatile qosa_bool_t s_cancel_pending = QOSA_FALSE;
-
-/*!< 最近一次发送的 cancel 事件 id（dev_evt_N）。服务端 canceled 回执按官方文档
-     回显该 id（id 为客户端自行生成的事件 ID），用于确证服务端是否正确关联、
-     执行了本次 cancel。 */
-static char s_last_cancel_id[40] = {0};
-
-/*!< 标记一次打断 cancel 已实际发送（send_raw 成功后调用），进入"待服务端确认"窗口。 */
-void coze_protocol_mark_cancel_sent(void)
-{
-    s_cancel_pending = QOSA_TRUE;
-    QLOGI("[chat_coze_protocol] cancel sent, awaiting canceled confirm");
-}
-
-/*!< cancel 卡死兜底：服务端一直未回 conversation.chat.canceled（cancel 已生效、
-     残余已停发但确认事件丢失/迟到），由下行任务心跳在"连续数秒无残余帧到达"时调用，
-     强制复位 cancel 待确认与 busy 状态。复位后：
-     - 下一个 sentence_start 不会再被 cancel_pending 拦下（可正常 resume）；
-     - 下一轮 VAD 起声时 busy=FALSE 不会误发 cancel（避免空闲时误发终止会话模型）。 */
-void coze_protocol_cancel_stuck_resolved(void)
-{
-    s_cancel_pending = QOSA_FALSE;
-    s_chat_busy = QOSA_FALSE;
-    QLOGW("[chat_coze_protocol] cancel stuck resolved: force reset cancel pending & busy");
-}
 
 /**
  * @brief 生成客户端事件 ID（官方文档要求上行事件携带 id 字段，便于服务端定位问题）。
@@ -92,7 +62,14 @@ int coze_protocol_build_update_event(char *buf, int buf_len, chat_session_mode_e
 #if CHATBOT_AUDIO_CODEC_G711A
     /* g711a/g711u 要求 format 仍为 pcm，采样率固定 8000（由 CHATBOT_AUDIO_SAMPLE_RATE 级联确保） */
     Q_cJSON_AddStringToObject(input_audio, COZE_FIELD_CODEC, COZE_AUDIO_CODEC_G711A);
-    Q_cJSON_AddNumberToObject(input_audio, COZE_FIELD_BIT_DEPTH, 8);
+    /* 关键：bit_depth 描述的是**输入源 PCM 的位深**（官方文档：默认 16，支持 8/16/24），
+       不是上传的 G711A 码流位深（1 字节/采样）。
+       若按编码后的位深声明为 8，服务端 VAD 前置路径会按错误位深处理解码还原出来的
+       PCM，使能量幅度偏小若干倍而永远达不到起声门限，表现为
+       input_audio_buffer.speech_started 完全不触发、服务端完全识别不到用户说话。
+       旧 client_interrupt（本地 VAD）方案只走 ASR 前处理，该问题不暴露；
+       改为 server_vad 后必然暴露，故此处恒声明输入源真实位深 16。 */
+    Q_cJSON_AddNumberToObject(input_audio, COZE_FIELD_BIT_DEPTH, CHATBOT_AUDIO_BIT_DEPTH);
 #else
     Q_cJSON_AddStringToObject(input_audio, COZE_FIELD_CODEC, COZE_AUDIO_CODEC_PCM);
     Q_cJSON_AddNumberToObject(input_audio, COZE_FIELD_BIT_DEPTH, CHATBOT_AUDIO_BIT_DEPTH);
@@ -133,8 +110,21 @@ int coze_protocol_build_update_event(char *buf, int buf_len, chat_session_mode_e
 #endif
 
     Q_cJSON *turn_detection = Q_cJSON_AddObjectToObject(data, COZE_FIELD_TURN_DETECTION);
-    (void)mode;
-    Q_cJSON_AddStringToObject(turn_detection, COZE_FIELD_TYPE, COZE_TURN_DETECTION_CLIENT_INTERRUPT);
+    if (mode == CHAT_SESSION_MODE_BUTTON)
+    {
+        /* 按键 PTT 模式：客户端控制语音起止（按下上传，松开 input_audio_buffer.complete）。 */
+        Q_cJSON_AddStringToObject(turn_detection, COZE_FIELD_TYPE, COZE_TURN_DETECTION_CLIENT_INTERRUPT);
+    }
+    else
+    {
+        /* VOICE 语音模式：server_vad（云端 VAD）。设备侧持续上传音频、不做任何本地
+           语音活动检测，由服务端判定用户说话起止并下发 speech_started / speech_stopped。
+           prefix_padding_ms 用于保留起声前的音节，silence_duration_ms 为判定
+           "停止说话"所需的静音时长。 */
+        Q_cJSON_AddStringToObject(turn_detection, COZE_FIELD_TYPE, COZE_TURN_DETECTION_SERVER_VAD);
+        Q_cJSON_AddNumberToObject(turn_detection, COZE_FIELD_PREFIX_PADDING_MS, CHATBOT_COZE_VAD_PREFIX_PADDING_MS);
+        Q_cJSON_AddNumberToObject(turn_detection, COZE_FIELD_SILENCE_DURATION_MS, CHATBOT_COZE_VAD_SILENCE_DURATION_MS);
+    }
 
     Q_cJSON     *subs = Q_cJSON_AddArrayToObject(data, COZE_FIELD_EVENT_SUBSCRIPTIONS);
     const char *sub_list[] = COZE_DEFAULT_EVENT_SUBSCRIPTIONS;
@@ -243,7 +233,6 @@ int coze_protocol_build_cancel_event(char *buf, int buf_len)
        conversation.chat.cancel 只需 id + event_type，无 data 字段，勿加 chat_id。 */
     char id_buf[32] = {0};
     coze_protocol_next_event_id(id_buf, sizeof(id_buf));
-    qosa_strncpy(s_last_cancel_id, id_buf, sizeof(s_last_cancel_id) - 1);
     return qosa_snprintf(buf, buf_len,
                          "{\"" COZE_FIELD_ID "\":\"%s\",\"" COZE_FIELD_EVENT_TYPE "\":\"" COZE_EVT_CONVERSATION_CHAT_CANCEL "\"}",
                          id_buf);
@@ -676,28 +665,14 @@ void coze_protocol_dispatch_downlink(const char *raw, int raw_len)
     }
     else if (strcmp(event_type, COZE_EVT_CONVERSATION_AUDIO_SENTENCE_START) == 0)
     {
-        /* 新一轮语音播报开始（开场白/新回答均以本事件起始）。若此前发生过打断(flush)
-           导致下行被静音门控，本事件即代表服务端已开始下发新一轮内容，解除门控恢复播放。
-           cancel 上行发出后服务端并不会立刻停发——残余 delta 连同旧回答的后继句子
-           会继续下发数秒才回 conversation.chat.canceled。此时若仍无条件 resume，残余旧回答
-           会在用户说完话后被当作新一轮继续播完。故 cancel 待确认窗口内(s_cancel_pending)的
-           sentence_start 一律忽略，保持静音门控丢弃残余；待服务端确认(canceled)或
-           真正开始新一轮(chat.created/in_progress)后才允许 resume。 */
-        if (s_cancel_pending == QOSA_FALSE)
-        {
-            coze_audio_downlink_resume();
-        }
-        else
-        {
-            QLOGI("[chat_coze_protocol] sentence_start ignored while cancel pending, keep muted");
-        }
+        /* 新一轮语音播报开始（开场白/新回答均以本事件起始）。打断时的旧音频已在
+           flush 时一次性排空，并在一个时间有界的窗口内丢弃在途残余帧；窗口到点
+           自动过期，故本事件无需做任何事，新音频直接正常播放。 */
     }
     else if ((strcmp(event_type, COZE_EVT_CHAT_CREATED) == 0) || (strcmp(event_type, COZE_EVT_CHAT_UPDATED) == 0))
     {
         s_audio_delta_count = 0;
-        /* 连接（重）建立/配置成功：取消遗留的 cancel 待确认标记，清除静音门控，允许开场白等播报 */
-        s_cancel_pending = QOSA_FALSE;
-        coze_audio_downlink_resume();
+        /* 连接（重）建立/配置成功：允许开场白等播报（打断窗口到点会自动过期，无需在此复位） */
         if (strcmp(event_type, COZE_EVT_CHAT_UPDATED) == 0)
         {
             QLOGI("[chat_coze_protocol] chat.updated received, post WS_CONNECTED event");
@@ -724,30 +699,21 @@ void coze_protocol_dispatch_downlink(const char *raw, int raw_len)
     }
     else if (strcmp(event_type, COZE_EVT_CONVERSATION_CHAT_COMPLETED) == 0)
     {
-        /* 一轮对话自然结束。注意：此处不关闭 cancel 待确认窗口——若该 completed 恰好
-           是"被打断轮"的收尾，残余音频可能仍在途，过早放开会让 sentence_start
-           误解除静音门控。窗口只由 canceled（服务端确认）或新一轮 created/in_progress 关闭。 */
+        /* 一轮对话自然结束：本轮已无后续音频，清除 busy 供按键 PTT 判定是否需发 cancel。 */
         s_chat_busy = QOSA_FALSE;
         post_simple_event(CHAT_EVT_CHAT_COMPLETED);
     }
     else if ((strcmp(event_type, COZE_EVT_CONVERSATION_CHAT_CREATED) == 0) ||
              (strcmp(event_type, COZE_EVT_CONVERSATION_CHAT_IN_PROGRESS) == 0))
     {
-        /* 服务端开始执行一轮对话：此后按下 PTT / VAD 起声若想打断才需要发 cancel。
-           新一轮开始即意味着上一轮（无论被打断还是自然结束）已彻底结束，关闭
-           cancel 待确认窗口，后续 sentence_start 允许恢复播放。 */
-        s_cancel_pending = QOSA_FALSE;
+        /* 服务端开始执行一轮对话：此后按键 PTT 若想打断才需要发 cancel。 */
         s_chat_busy = QOSA_TRUE;
-        /* 极端场景兜底：打断后 canceled 回执丢失/迟到，服务端未发 canceled 直接
-           开新一轮 created/in_progress。此时旧轮残余必然已结束，可安全解除残留的
-           静音门控；正常轮次本分支 muted=FALSE，resume 为空操作无副作用。 */
-        coze_audio_downlink_resume();
     }
     else if ((strcmp(event_type, COZE_EVT_CONVERSATION_CHAT_FAILED) == 0) ||
              (strcmp(event_type, COZE_EVT_CONVERSATION_CHAT_CANCELED) == 0))
     {
-        /* canceled：服务端确认打断完成——旧一轮残余已全部发完(不会再有任何该轮 delta)。
-           cancel 待确认窗口关闭。此时解除下行静音门控，等待随后开始的新一轮音频。*/
+        /* failed / canceled：本轮结束（canceled 表示打断完成，旧轮残余已全部发完）。
+           清除 busy，供按键 PTT 判定下一轮是否需发 cancel。 */
         Q_cJSON *data_obj = Q_cJSON_GetObjectItem(root, COZE_FIELD_DATA);
         Q_cJSON *id_item = Q_cJSON_GetObjectItem(root, COZE_FIELD_ID);
         /* 官方文档字段路径不同：failed 的真实错误码在 data.last_error.code/msg；
@@ -774,13 +740,11 @@ void coze_protocol_dispatch_downlink(const char *raw, int raw_len)
         {
             qosa_snprintf(code_buf, sizeof(code_buf), "%s", code_item->valuestring);
         }
-        QLOGI("[chat_coze_protocol] %s: id=%s code=%s msg=%s (last_cancel=%s cancel_pending was %d)",
+        QLOGI("[chat_coze_protocol] %s: id=%s code=%s msg=%s",
               event_type,
               Q_cJSON_IsString(id_item) ? id_item->valuestring : "?",
               code_buf,
-              Q_cJSON_IsString(msg_item) ? msg_item->valuestring : "?",
-              s_last_cancel_id,
-              (int)s_cancel_pending);
+              Q_cJSON_IsString(msg_item) ? msg_item->valuestring : "?");
         if (strcmp(event_type, COZE_EVT_CONVERSATION_CHAT_FAILED) == 0)
         {
             /* 日志行会截断长字符串，failed 事件按 120 字符分片完整回显原始 JSON */
@@ -790,9 +754,7 @@ void coze_protocol_dispatch_downlink(const char *raw, int raw_len)
                 QLOGI("[chat_coze_protocol] failed raw[%d]: %.*s", off, chunk, raw + off);
             }
         }
-        s_cancel_pending = QOSA_FALSE;
         s_chat_busy = QOSA_FALSE;
-        coze_audio_downlink_resume();
     }
     else if (strcmp(event_type, COZE_EVT_CONVERSATION_CHAT_REQUIRES_ACTION) == 0)
     {
