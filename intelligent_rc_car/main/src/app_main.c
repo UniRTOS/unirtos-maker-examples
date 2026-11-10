@@ -60,12 +60,12 @@ static void car_on_cloud_rx(const char *topic, const char *payload, qosa_uint32_
     char        byte = 0;
     const char *result = "ok";
 
-    CAR_LOGI("[car][main][rx] topic=%s len=%d payload=%s", topic, (int)payload_len, payload);
+    CAR_LOGI("[main][rx] topic=%s len=%d payload=%s", topic, (int)payload_len, payload);
 
     cmd = car_cmd_parse(payload, &seq);
     if (cmd == CAR_CMD_INVALID)
     {
-        CAR_LOGW("[car][main][cmd] bad command");
+        CAR_LOGW("[main][cmd] bad command");
         car_publish_ack(seq, "", "bad_cmd");
         return;
     }
@@ -79,7 +79,7 @@ static void car_on_cloud_rx(const char *topic, const char *payload, qosa_uint32_
         result = "uart_busy";
     }
 
-    CAR_LOGI("[car][main][cmd] %s -> '%c' %s", car_cmd_name(cmd), byte, result);
+    CAR_LOGI("[main][cmd] %s -> '%c' %s", car_cmd_name(cmd), byte, result);
     car_publish_ack(seq, car_cmd_name(cmd), result);
 }
 
@@ -99,7 +99,7 @@ static void car_status_process(void *ctx)
     char          stop = car_cmd_to_uart_byte(CAR_CMD_STOP);
 
     QOSA_UNUSED(ctx);
-    CAR_LOGV("[car][main] status task started, sdk=%s", qosa_sdk_get_version());
+    CAR_LOGV("[main] status task started, sdk=%s", qosa_sdk_get_version());
 
     while (1)
     {
@@ -109,10 +109,10 @@ static void car_status_process(void *ctx)
         connected = (car_cloud_is_connected() == 1) ? QOSA_TRUE : QOSA_FALSE;
         if ((was_connected == QOSA_TRUE) && (connected == QOSA_FALSE))
         {
-            CAR_LOGW("[car][main][failsafe] cloud link down, stop car");
+            CAR_LOGW("[main][failsafe] cloud link down, stop car");
             if (car_uart_send_acked((qosa_uint8_t)stop) != 0)
             {
-                CAR_LOGE("[car][main][failsafe] stop send failed");
+                CAR_LOGE("[main][failsafe] stop send failed");
             }
         }
         was_connected = connected;
@@ -125,7 +125,7 @@ static void car_status_process(void *ctx)
 
         if (connected == QOSA_FALSE)
         {
-            CAR_LOGD("[car][main] cloud link is down");
+            CAR_LOGD("[main] cloud link is down");
             continue;
         }
 
@@ -143,19 +143,19 @@ static void car_status_process(void *ctx)
  */
 void unir_smallcar_init(void)
 {
-    CAR_LOGI("[car][main] enter smallcar demo, sdk=%s", qosa_sdk_get_version());
+    CAR_LOGI("[main] enter smallcar demo, sdk=%s", qosa_sdk_get_version());
     if(qosa_gpio_set_voltage(VOL_3_30V) != (qosa_gpio_error_e)QOSA_OK) {
-        CAR_LOGE("[car][main] failed to set GPIO voltage");
+        CAR_LOGE("[main] failed to set GPIO voltage");
     }
     
     if (car_uart_init() != 0)
     {
-        CAR_LOGW("[car][main] uart channel unavailable, commands will be acked as uart_busy");
+        CAR_LOGW("[main] uart channel unavailable, commands will be acked as uart_busy");
     }
 
     if (car_cloud_init(car_on_cloud_rx) != 0)
     {
-        CAR_LOGW("[car][main] cloud channel unavailable, check CONFIG_QCM_MQTT_FUNC and triple config");
+        CAR_LOGW("[main] cloud channel unavailable, check CONFIG_QCM_MQTT_FUNC and triple config");
     }
 
     if (g_car_status_task == QOSA_NULL)
