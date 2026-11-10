@@ -100,6 +100,16 @@ static void car_status_process(void *ctx)
 
     QOSA_UNUSED(ctx);
     CAR_LOGV("[main] status task started, sdk=%s", qosa_sdk_get_version());
+    
+    if (car_uart_init() != 0)
+    {
+        CAR_LOGW("[main] uart channel unavailable, commands will be acked as uart_busy");
+    }
+
+    if (car_cloud_init(car_on_cloud_rx) != 0)
+    {
+        CAR_LOGW("[main] cloud channel unavailable, check CONFIG_QCM_MQTT_FUNC and triple config");
+    }
 
     while (1)
     {
@@ -146,16 +156,6 @@ void unir_smallcar_init(void)
     CAR_LOGI("[main] enter smallcar demo, sdk=%s", qosa_sdk_get_version());
     if(qosa_gpio_set_voltage(VOL_3_30V) != (qosa_gpio_error_e)QOSA_OK) {
         CAR_LOGE("[main] failed to set GPIO voltage");
-    }
-    
-    if (car_uart_init() != 0)
-    {
-        CAR_LOGW("[main] uart channel unavailable, commands will be acked as uart_busy");
-    }
-
-    if (car_cloud_init(car_on_cloud_rx) != 0)
-    {
-        CAR_LOGW("[main] cloud channel unavailable, check CONFIG_QCM_MQTT_FUNC and triple config");
     }
 
     if (g_car_status_task == QOSA_NULL)
