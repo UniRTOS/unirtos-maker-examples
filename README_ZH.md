@@ -47,6 +47,7 @@ UniRTOS是移远通信自主开发并持续维护的开发框架，以统一公�
 - [4G USB 上网卡](4g_donlg/README_zh.md)：共享网络，本地管理页面。需要可上网的 SIM 卡
 - [墨水屏电子价签](e-ink_screen/README_zh.md)：在墨水屏上展示六种商品的信息。需要 7.5 英寸 V2 单色墨水屏及配套驱动板。
 - [大屏网关](large_screen/README.zh.md)：基于 LVGL 实现农业、工业和智能家居多场景触摸界面。
+- [墨水屏温湿度计](e-ink_humiture_demo/README_ZH.md)：在墨水屏上显示周期更新的温湿度信息，支持串口设置墨水屏标签
 
 ## 社区与支持
 
