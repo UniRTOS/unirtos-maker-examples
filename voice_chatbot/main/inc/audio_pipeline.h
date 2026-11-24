@@ -59,7 +59,8 @@ int audio_player_write_frame(const qosa_uint8_t *pcm, qosa_uint32_t len);
 
 /**
  * @brief 打断时立即停止播放并清空缓冲（强制关闭播放流；下一帧到达时重新打开）。
- *        调用方：本地 VAD SPEECH_START / PTT 按下 / 服务端 speech_started 兜底。
+ *        调用方：服务端 input_audio_buffer.speech_started（server_vad 判定用户起声，
+ *        即打断发生）或按键 PTT 按下。
  */
 int audio_player_stop_and_flush(void);
 

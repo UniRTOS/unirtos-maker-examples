@@ -62,13 +62,14 @@ void coze_session_stop(void);
 
 /**
  * @brief 主动发送打断/取消当前回复事件（conversation.chat.cancel）。
- *        用于本地判定用户开口打断（本地 VAD SPEECH_START / PTT 按下）且服务端
- *        有对话进行中时，取消 AI 正在进行的回复生成。
+ *        仅按键 PTT 模式使用：按下按键且服务端有对话进行中时取消 AI 正在进行的回复生成。
+ *        VOICE（server_vad）模式下打断由服务端自动完成，设备侧不使用本接口。
  */
 int coze_session_send_cancel(void);
 
 /**
- * @brief 提交当前客户端控制的语音段，通知 Coze 开始处理本轮输入。
+ * @brief 提交当前客户端控制的语音段（input_audio_buffer.complete）。
+ *        仅按键 PTT 模式使用（松开按键）；server_vad 模式下该事件无效。
  */
 int coze_session_send_audio_complete(void);
 

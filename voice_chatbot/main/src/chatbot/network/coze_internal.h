@@ -25,17 +25,11 @@ int  coze_protocol_build_cancel_event(char *buf, int buf_len);
 int  coze_protocol_build_tool_result_event(char *buf, int buf_len, const char *chat_id, const char *tool_call_id, const char *result_json);
 void coze_protocol_dispatch_downlink(const char *raw, int raw_len);
 /*!< 查询服务端是否有一轮对话正在进行（chat.created/in_progress 后未收到
-     completed/failed/canceled）。仅在该状态为真时才应发送 conversation.chat.cancel 打断；
-     AI 空闲（如开场白播完）时按下 PTT 只是开启新一轮输入，发 cancel 会把会话模型终止，
-     导致后续同一连接内新 chat 报 "model has been terminated"。 */
+     completed/failed/canceled）。仅按键 PTT 模式需要据此决定是否发
+     conversation.chat.cancel 打断；AI 空闲（如开场白播完）时按下 PTT 只是开启新一轮
+     输入，发 cancel 会把会话模型终止，导致后续同一连接内新 chat 报
+     "model has been terminated"。server_vad（VOICE）模式不使用该判定——打断由服务端完成。 */
 qosa_bool_t coze_protocol_is_chat_busy(void);
-/*!< 标记一次打断 cancel 已实际发送成功（发送端调用）：进入"待服务端 canceled 确认"
-     窗口，窗口内下行的 sentence_start 不得解除静音门控（cancel 后服务端仍会把残余旧回答
-     连同其新句子继续下发数秒，直到回 canceled 才停）。 */
-void coze_protocol_mark_cancel_sent(void);
-/*!< cancel 卡死兜底：服务端一直未回 canceled、且本地已判定残余停发时，
-     由 audio_task 兜底心跳调用，强制复位 cancel 待确认与 busy 状态。 */
-void coze_protocol_cancel_stuck_resolved(void);
 
 /* ------------------------------ coze_audio_task.c ------------------------------ */
 int  coze_audio_tasks_start(void);
@@ -44,12 +38,14 @@ void coze_audio_set_session_mode(chat_session_mode_e mode);
 void coze_audio_set_ptt_pressed(qosa_bool_t pressed);
 /*!< pcm 所有权转移给下行任务，由下行任务负责 qosa_free */
 void coze_audio_downlink_push(qosa_uint8_t *pcm, int len);
-/*!< 打断时调用（本地 VAD SPEECH_START / PTT 按下 / 服务端 speech_started 兜底）：
-     清空本地待播队列、停播放流并置下行静音门控 */
+/*!< 用户打断：立即关闭本地播放并清除待播尾音，并在随后一个时间有界的窗口内
+     丢弃服务端在途的旧回复残余帧。调用方：
+       - VOICE（server_vad）模式：收到服务端 input_audio_buffer.speech_started
+         （服务端判定用户起声，即打断发生的那一刻）；
+       - BUTTON（PTT）模式：按下按键准备说话时。
+     窗口到点自动过期（不依赖任何对端事件解除），故不会永久静音或永久丢弃下行；
+     队列空且播放流未打开时为空操作；两次清尾间隔受冷却限制。 */
 void coze_audio_flush_downlink(void);
-/*!< 服务端开始新一轮回答（sentence_start / chat.created/in_progress）时调用：
-     解除打断(flush)后的下行静音门控，恢复新一轮音频播放 */
-void coze_audio_downlink_resume(void);
 
 /* ------------------------------ coze_session.c ------------------------------ */
 chat_session_mode_e coze_session_get_mode(void);

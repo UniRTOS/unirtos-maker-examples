@@ -76,7 +76,8 @@ void coze_session_stop(void)
 }
 
 /**
- * @brief 发送 conversation.chat.cancel 打断事件，并在发送成功后进入待确认窗口。
+ * @brief 发送 conversation.chat.cancel 打断事件（仅按键 PTT 模式使用：
+ *        server_vad 模式下打断由服务端自动完成，设备侧不发 cancel）。
  *
  * @return 0 表示发送成功；返回负值表示构造或发送失败。
  */
@@ -89,14 +90,7 @@ int coze_session_send_cancel(void)
         return -1;
     }
     QLOGI("[chat_coze_session] send cancel: %s", buf);
-    int ret = coze_client_send_raw(buf, len, QCM_WEB_OPCODE_TEXT);
-    if (ret == 0)
-    {
-        /* 发送成功才进入"待服务端 canceled 确认"窗口：窗口内 sentence_start
-           不会解除下行静音门控，防止 cancel 后服务端仍下发的残余旧回答被当作新一轮播出。 */
-        coze_protocol_mark_cancel_sent();
-    }
-    return ret;
+    return coze_client_send_raw(buf, len, QCM_WEB_OPCODE_TEXT);
 }
 
 /**
