@@ -1,0 +1,33 @@
+#ifndef XIAOZHI_TOUCH_CONFIG_H
+#define XIAOZHI_TOUCH_CONFIG_H
+
+/* Enabled explicitly by the Xiaozhi/W180 application, not old offline fixtures
+ * or isolated LCD firmware. QuecDuino: shared codec I2C1, RST=J4-5/PIN21. */
+#ifndef XIAOZHI_TOUCH_ENABLE
+#define XIAOZHI_TOUCH_ENABLE 0
+#endif
+#ifndef XIAOZHI_TOUCH_FACE_MODE
+#define XIAOZHI_TOUCH_FACE_MODE 0
+#endif
+#ifndef XIAOZHI_TOUCH_TALK
+#define XIAOZHI_TOUCH_TALK 0
+#endif
+#if (XIAOZHI_TOUCH_ENABLE != 0 && XIAOZHI_TOUCH_ENABLE != 1) || \
+    (XIAOZHI_TOUCH_FACE_MODE != 0 && XIAOZHI_TOUCH_FACE_MODE != 1) || \
+    (XIAOZHI_TOUCH_TALK != 0 && XIAOZHI_TOUCH_TALK != 1)
+#error "Touch options must be 0 or 1"
+#endif
+#define XIAOZHI_TOUCH_RESET_PIN 21U
+#define XIAOZHI_TOUCH_POLL_MS 20U
+#define XIAOZHI_TOUCH_RELEASE_MS 60U
+#define XIAOZHI_TOUCH_SAMPLE_GAP_MS 120U
+#define XIAOZHI_TOUCH_TAP_MIN_MS 40U
+#define XIAOZHI_TOUCH_LONG_MS 800U
+#define XIAOZHI_TOUCH_SWIPE_MAX_MS 1500U
+#define XIAOZHI_TOUCH_SLOP_PX 24U
+#define XIAOZHI_TOUCH_SWIPE_PX 60U
+#define XIAOZHI_TOUCH_SWIPE_Y_PX 40U
+#define XIAOZHI_TOUCH_HAPPY_MS 2000U
+#define XIAOZHI_TOUCH_STACK_BYTES 3072U
+
+#endif

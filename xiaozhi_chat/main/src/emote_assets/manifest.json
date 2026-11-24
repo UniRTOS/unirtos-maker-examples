@@ -1,0 +1,180 @@
+{
+  "source_commit": "29aa5259ac22651b8636683698c021482050b206",
+  "source_sha256": {
+    "Happy.eaf": "2ed3a64ecdb7a78e2c9959bfc3758c2742d5447d4a2bcdc6d2bf072763deba5c",
+    "neutral.eaf": "21280165824bbf806dc75d76f8ef0b0cdf73ce43c9ce9eda762f93a2da5dac87",
+    "angry.eaf": "63f6fa85175ad53f9c0c1fde0a5c19210257ec69f4cb45660d3db1fabdf9743a",
+    "sleep.eaf": "efa178f2d486c1143bff99f3304847fc73909e9ba60bcc52182fd818fe9ce680",
+    "Sad.eaf": "b9e0e2fb4e73e96edc331c3736f9d952de2507a711da34a5587c4426dcbca7e8",
+    "confused.eaf": "dafcdbe72939d7ef1061466caa30eb83517e953f284b53d9f6d708ac4319a05d",
+    "cry.eaf": "d09e4eb5ca10ff7040af3ff0b6ce3ad06db0a5902935bf4b02d50b09dcf9e2c2",
+    "shocked.eaf": "bf97df5acdb7b64a34bb1f32ee2d5fd98a1117c6f06daad4a30e99ec44b47cf8",
+    "winking.eaf": "0969d76cd6dff1add4a140b4614025bf11703baa038b4b6190d0a22ea31eebd4"
+  },
+  "frames": [
+    {
+      "name": "neutral",
+      "source": "neutral.eaf",
+      "frame": 29,
+      "rgb565_crc32": "c282ecbb",
+      "render_fnv1a": "fd3ccd8d"
+    },
+    {
+      "name": "neutral",
+      "source": "neutral.eaf",
+      "frame": 59,
+      "rgb565_crc32": "7fc8254f",
+      "render_fnv1a": "96f3d81d"
+    },
+    {
+      "name": "happy",
+      "source": "Happy.eaf",
+      "frame": 14,
+      "rgb565_crc32": "70d1fd3a",
+      "render_fnv1a": "013720a7"
+    },
+    {
+      "name": "happy",
+      "source": "Happy.eaf",
+      "frame": 28,
+      "rgb565_crc32": "ca92ceab",
+      "render_fnv1a": "0c5045ad"
+    },
+    {
+      "name": "sad",
+      "source": "Sad.eaf",
+      "frame": 32,
+      "rgb565_crc32": "064b1c4b",
+      "render_fnv1a": "97b07e05"
+    },
+    {
+      "name": "sad",
+      "source": "Sad.eaf",
+      "frame": 64,
+      "rgb565_crc32": "ab79cc0a",
+      "render_fnv1a": "bb53d173"
+    },
+    {
+      "name": "angry",
+      "source": "angry.eaf",
+      "frame": 17,
+      "rgb565_crc32": "985c03ed",
+      "render_fnv1a": "2cfd439d"
+    },
+    {
+      "name": "angry",
+      "source": "angry.eaf",
+      "frame": 34,
+      "rgb565_crc32": "7b77b1ae",
+      "render_fnv1a": "23b6fbdb"
+    },
+    {
+      "name": "surprised",
+      "source": "shocked.eaf",
+      "frame": 11,
+      "rgb565_crc32": "2c2591a5",
+      "render_fnv1a": "b0e2608b"
+    },
+    {
+      "name": "surprised",
+      "source": "shocked.eaf",
+      "frame": 23,
+      "rgb565_crc32": "25a64e5f",
+      "render_fnv1a": "2d86a13d"
+    },
+    {
+      "name": "sleepy",
+      "source": "sleep.eaf",
+      "frame": 39,
+      "rgb565_crc32": "182c138c",
+      "render_fnv1a": "84e47939"
+    },
+    {
+      "name": "sleepy",
+      "source": "sleep.eaf",
+      "frame": 79,
+      "rgb565_crc32": "b0b27c44",
+      "render_fnv1a": "50f1a1fb"
+    },
+    {
+      "name": "thinking",
+      "source": "confused.eaf",
+      "frame": 26,
+      "rgb565_crc32": "c9c56ae0",
+      "render_fnv1a": "73686201"
+    },
+    {
+      "name": "thinking",
+      "source": "confused.eaf",
+      "frame": 52,
+      "rgb565_crc32": "e0f84317",
+      "render_fnv1a": "8eb59943"
+    },
+    {
+      "name": "listening",
+      "source": "neutral.eaf",
+      "frame": 0,
+      "rgb565_crc32": "bcfcda04",
+      "render_fnv1a": "4fe43dab"
+    },
+    {
+      "name": "listening",
+      "source": "neutral.eaf",
+      "frame": 44,
+      "rgb565_crc32": "f7308664",
+      "render_fnv1a": "6cbb8b71"
+    },
+    {
+      "name": "speaking",
+      "source": "Happy.eaf",
+      "frame": 7,
+      "rgb565_crc32": "b8e3fe44",
+      "render_fnv1a": "4db234d9"
+    },
+    {
+      "name": "speaking",
+      "source": "Happy.eaf",
+      "frame": 21,
+      "rgb565_crc32": "f1d901bc",
+      "render_fnv1a": "70e7018f"
+    },
+    {
+      "name": "connecting",
+      "source": "confused.eaf",
+      "frame": 13,
+      "rgb565_crc32": "39d5ef82",
+      "render_fnv1a": "0d213d45"
+    },
+    {
+      "name": "connecting",
+      "source": "confused.eaf",
+      "frame": 39,
+      "rgb565_crc32": "8e56c6ce",
+      "render_fnv1a": "342e3ee1"
+    },
+    {
+      "name": "error",
+      "source": "cry.eaf",
+      "frame": 14,
+      "rgb565_crc32": "b0a4f539",
+      "render_fnv1a": "479d243f"
+    },
+    {
+      "name": "error",
+      "source": "cry.eaf",
+      "frame": 29,
+      "rgb565_crc32": "b65ff163",
+      "render_fnv1a": "ddc17c09"
+    },
+    {
+      "name": "blink",
+      "source": "winking.eaf",
+      "frame": 10,
+      "rgb565_crc32": "87ad1647",
+      "render_fnv1a": "8cb470e1"
+    }
+  ],
+  "estimated_arm_bytes": 27863,
+  "palette_colors": 157,
+  "unique_rows": 1371
+}
