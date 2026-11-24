@@ -29,7 +29,7 @@ For the original case documentation and more resources, visit the [UniRTOS secti
 
 ## Example Support
 
-The basic examples target the EG800Z-CN module. Application demos have specific module variants and peripheral requirements; check each example's documentation before building or wiring hardware. All 16 examples include English and Chinese documentation; the links below open the English guides.
+The basic examples target the EG800Z-CN module. Application demos have specific module variants and peripheral requirements; check each example's documentation before building or wiring hardware. All 17 examples include English and Chinese documentation; the links below open the English guides.
 
 - [Boot Reason](boot_reason/README.md): Get the boot reason after a module restart.
 - [Data Call](datacall/README.md): Quickly connect to a cellular network. Requires an available SIM card.
@@ -42,6 +42,7 @@ The basic examples target the EG800Z-CN module. Application demos have specific 
 - [Emergency Call Alarm](emergency_call_alarm/README.md): Send alarm SMS messages and call emergency contacts in rotation.
 - [Small Screen Demo](small_screen_demo/README.md): Run a clock face and interactive tools on a circular touch screen.
 - [Voice Chatbot](voice_chatbot/README.md): Build a Coze-based voice assistant with on-device tool calling.
+- [Xiaozhi Desktop Robot](xiaozhi_chat/README.md): A Xiaozhi-AI voice desktop robot with continuous conversation, a round touch screen, and on-device motor/volume tools.
 - [HTTPS Get Weather](https_get_weather/README.md): Obtain and print the online weather information. An available SIM card is required.
 - [MQTT Demo](mqtt_demo/README.md)： The PC controls the development board via MQTT. An available SIM card is necessary.
 - [4G USB Dongle](4g_donlg/README.md): Share a cellular connection over USB with a local management page. Requires a data-enabled SIM card and a USB data cable.
