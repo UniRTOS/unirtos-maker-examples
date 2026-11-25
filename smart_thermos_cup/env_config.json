@@ -1,0 +1,17 @@
+{
+  "unirtos_root": "",
+  "build": {
+    "module": "EG800ZCN_LG"
+  },
+  "sdk": {
+    "version": "1.0.5"
+  },
+  "libraries": {
+    "list": [
+      {
+        "name": "unirtos-lvgl",
+        "version": "8.3.11"
+      }
+    ]
+  }
+}
