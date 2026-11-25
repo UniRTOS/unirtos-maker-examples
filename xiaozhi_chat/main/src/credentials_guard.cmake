@@ -1,0 +1,10 @@
+# Fail closed if an example is edited again; never print its values.
+set(_example ${_xz_dir}/xiaozhi_credentials.example.h)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_example})
+file(READ ${_example} _xz_template)
+foreach(_key WS_URL AUTH_TOKEN DEVICE_ID CLIENT_ID)
+    if(_xz_template MATCHES "#[ \t]*define[ \t]+XIAOZHI_${_key}[ \t]+\"[^\"]+\"")
+        message(FATAL_ERROR "Xiaozhi example is populated. Move values to ignored local, restore empty example; no values printed.")
+    endif()
+endforeach()
+unset(_xz_template)
