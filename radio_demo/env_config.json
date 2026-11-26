@@ -7,6 +7,12 @@
     "version": "1.0.5"
   },
   "libraries": {
-    "list": []
+    "manifest_repo_url": "https://github.com/unirtos/unirtos-libs-manifests.git",
+    "list": [
+      {
+        "name": "unirtos-lvgl",
+        "version": "1.0.0"
+      }
+    ]
   }
 }

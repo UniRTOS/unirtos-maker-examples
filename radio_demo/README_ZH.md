@@ -92,6 +92,7 @@
 ### 软件要求
 
 - UniRTOS SDK 1.0.5 和 `EG800ZCN_LA` 模组配置（见 `env_config.json`）
+- 官方 [unirtos-lvgl](https://github.com/UniRTOS/unirtos-lvgl) 库 v1.0.0（LVGL 8.3.11），已在 `env_config.json` 中声明，由 `unirtos-cli env-setup` 自动下载
 - UniRTOS 命令行构建环境及受支持的固件烧录工具
 - EPAT 或其他受支持的设备日志查看工具
 
@@ -105,9 +106,6 @@
 
 ```text
 radio_demo/
-├── components/
-│   ├── lv_conf.h               # LVGL 配置
-│   └── lvgl/                   # LVGL 9.2.2 源码
 ├── main/
 │   ├── ec11/                   # 旋钮及按键驱动
 │   ├── inc/                    # 应用及事件接口
@@ -123,7 +121,7 @@ radio_demo/
 ├── media/                      # 实物照片
 ├── menuconfig/                 # 应用配置
 ├── CMakeLists.txt              # 外部应用目标和源文件收集
-├── env_config.json             # UniRTOS SDK 和模组配置
+├── env_config.json             # UniRTOS SDK、模组和依赖库配置
 ├── README.md                   # 英文说明
 └── README_ZH.md                # 中文说明
 ```
@@ -135,6 +133,8 @@ radio_demo/
 ```powershell
 unirtos-cli env-setup
 ```
+
+该命令会同时把 `env_config.json` 中声明的 LVGL 库下载到 `~/.unirtos/libraries/unirtos-lvgl/v1.0.0/`，本仓库不包含 LVGL 源码。由于 Gitee 镜像的库清单暂未收录 `unirtos-lvgl`，`env_config.json` 通过 `libraries.manifest_repo_url` 指定使用 GitHub 上的清单。
 
 为默认模组构建固件。如本机安装的固件版本不同，请替换版本号：
 
@@ -155,8 +155,8 @@ unirtos-cli build -m EG800ZCN_LA -v EG800ZCNLAR01A01_OCPU_20261126
 [ec11] EC11 ready: A pin=20 gpio=27, B pin=21 gpio=17, C pin=19, idle AB=11 (expect 11)  
 [lcd] LCD gpio: cs=12 dc=9 rst=8 
 [lcd] LCD ready: ST7789 320x240 on SPI1 
-[radio_ui] LVGL 9.2.2 display ready: 320x240 RGB565, partial buffer=20480 bytes 
-[radio_ui] LVGL first flush: x=0 y=0 w=320 h=32 format=18 
+[radio_ui] LVGL 8.3.11 display ready: 320x240 RGB565, partial buffer=20480 bytes 
+[radio_ui] LVGL first flush: x=0 y=0 w=320 h=32 
 [radio_ui] LVGL initial flushes=8 errors=0 
 [i2c] Software I2C ready: SCL pin=28 gpio=10 SDA pin=29 gpio=11 
 [i2c] SDA pull before toggle: 2 (UP=2) 
@@ -231,12 +231,12 @@ flowchart LR
 - A/B 相变化触发 `ec11_rotate_isr()`：根据前后的电平组合判断方向，将有效的旋转事件放入环形缓冲区，并唤醒 EC11 任务。按键中断只标记边沿并唤醒任务，不在中断里处理收音或显示。
 - `ec11_task_start()` 等待信号量，读取旋转事件；按键经消抖后，只在确认按下时上报。任务通过回调把事件交给应用，再由应用放入消息队列。
 
-**显示（[`main/radio_ui/radio_ui.c`](main/radio_ui/radio_ui.c)、[`main/radio_ui/lcd/`](main/radio_ui/lcd/)、[`components/lvgl/`](components/lvgl/)）**
+**显示（[`main/radio_ui/radio_ui.c`](main/radio_ui/radio_ui.c)、[`main/radio_ui/lcd/`](main/radio_ui/lcd/)、[unirtos-lvgl](https://github.com/UniRTOS/unirtos-lvgl)）**
 
 - `radio_ui_init()` 初始化 LCD 和 LVGL，创建页面、配置绘图缓冲区；首帧刷新后再打开背光，减少上电时显示随机画面。
 - 收音任务调用 `radio_ui_update()`，由 `radio_lvgl_update_dashboard()` 根据 `radio_ui_state_t` 更新频率、音量、状态文字、信号格和颜色。信号格表示 RSSI；切台后单声道/立体声状态要等下一次 RSQ 查询。
 - `radio_ui_process()` 调用 LVGL 的定时处理函数。LVGL 需要刷新区域时，通过 `radio_lvgl_flush()` 调用 `lcd_draw()`；LCD 驱动设置屏幕绘制区域，再通过 SPI 发送 RGB565 像素。
-- 修改界面布局时先看 `radio_lvgl_make_dashboard()`；修改显示内容和模式颜色时看 `radio_lvgl_update_dashboard()`；刻度尺和光晕分别由 `radio_lvgl_draw_scale()` 和 `radio_lvgl_draw_glow()` 绘制。LVGL 堆内存为 32 KiB，局部绘图缓冲区为 320 × 32 像素；增加字体或特效时请留意内存。配置位于 [`components/lv_conf.h`](components/lv_conf.h)。
+- 修改界面布局时先看 `radio_lvgl_make_dashboard()`；修改显示内容和模式颜色时看 `radio_lvgl_update_dashboard()`；刻度尺和光晕分别由 `radio_lvgl_draw_scale()` 和 `radio_lvgl_draw_glow()` 绘制。LVGL 堆内存为 48 KiB，局部绘图缓冲区为 320 × 32 像素；增加字体或特效时请留意内存。官方配置只启用了 Montserrat 14/16，Montserrat 20/24/28 由应用的 `CMakeLists.txt` 自行编译。配置位于库中的 `include/lv_conf.h`。
 
 **一次调频过程**
 

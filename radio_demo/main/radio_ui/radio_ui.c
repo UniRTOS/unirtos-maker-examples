@@ -12,8 +12,15 @@
 #define LVGL_DRAW_ROWS 32U
 #define UI_BACKLIGHT_PERCENT 60U
 
-static uint32_t s_draw_buf[(LCD_WIDTH * LVGL_DRAW_ROWS * sizeof(uint16_t) + sizeof(uint32_t) - 1U) / sizeof(uint32_t)];
-static lv_display_t *s_display;
+#if LV_COLOR_DEPTH != 16 || LV_COLOR_16_SWAP != 0
+#error "radio_ui expects native RGB565 (LV_COLOR_DEPTH 16, LV_COLOR_16_SWAP 0)"
+#endif
+
+static lv_color_t s_draw_buf[LCD_WIDTH * LVGL_DRAW_ROWS];
+static lv_disp_draw_buf_t s_draw_buf_dsc;
+static lv_disp_drv_t s_disp_drv;
+static lv_disp_t *s_display;
+static uint32_t s_last_tick;
 static lv_obj_t *s_frequency;
 static lv_obj_t *s_volume;
 static lv_obj_t *s_unit;
@@ -22,22 +29,29 @@ static bool s_initialized;
 static uint32_t s_flush_count;
 static uint32_t s_flush_errors;
 
-static uint32_t radio_lvgl_tick_ms(void)
+/* The official LVGL build uses LV_TICK_CUSTOM 0, so feed elapsed time with lv_tick_inc(). */
+static void radio_lvgl_tick_update(void)
 {
     /* SDK config uses a 1 kHz system tick. */
-    return (uint32_t)qosa_get_system_tick_cnt();
+    uint32_t now = (uint32_t)qosa_get_system_tick_cnt();
+    uint32_t elapsed = now - s_last_tick;
+
+    if (elapsed > 0U)
+    {
+        lv_tick_inc(elapsed);
+        s_last_tick = now;
+    }
 }
 
-static void radio_lvgl_flush(lv_display_t *display, const lv_area_t *area, uint8_t *pixels)
+static void radio_lvgl_flush(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *pixels)
 {
     uint16_t width = (uint16_t)(area->x2 - area->x1 + 1);
     uint16_t height = (uint16_t)(area->y2 - area->y1 + 1);
 
     if (s_flush_count == 0U)
     {
-        QLOGI("[radio_ui] LVGL first flush: x=%d y=%d w=%u h=%u format=%u",
-              (int)area->x1, (int)area->y1, (unsigned int)width, (unsigned int)height,
-              (unsigned int)lv_display_get_color_format(display));
+        QLOGI("[radio_ui] LVGL first flush: x=%d y=%d w=%u h=%u",
+              (int)area->x1, (int)area->y1, (unsigned int)width, (unsigned int)height);
     }
     s_flush_count++;
     if (!lcd_draw((uint16_t)area->x1, (uint16_t)area->y1, width, height, (const uint16_t *)pixels))
@@ -46,7 +60,7 @@ static void radio_lvgl_flush(lv_display_t *display, const lv_area_t *area, uint8
         QLOGE("[radio_ui] LVGL display flush failed: x=%d y=%d w=%u h=%u",
               (int)area->x1, (int)area->y1, (unsigned int)width, (unsigned int)height);
     }
-    lv_display_flush_ready(display);
+    lv_disp_flush_ready(drv);
 }
 
 #define COLOR_BG 0x080C14U
@@ -98,7 +112,7 @@ static lv_obj_t *radio_lvgl_rect(lv_obj_t *parent, int x, int y, int w, int h, u
     lv_obj_set_style_bg_color(obj, lv_color_hex(color), 0);
     lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(obj, radius, 0);
-    lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_clear_flag(obj, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
     return obj;
 }
 
@@ -135,9 +149,9 @@ static lv_opa_t radio_lvgl_scale_opa(int32_t dx, lv_opa_t max)
 
 static void radio_lvgl_draw_scale(lv_event_t *event)
 {
-    lv_layer_t *layer = lv_event_get_layer(event);
+    lv_draw_ctx_t *draw_ctx = lv_event_get_draw_ctx(event);
     lv_area_t area;
-    lv_obj_get_coords(lv_event_get_target_obj(event), &area);
+    lv_obj_get_coords(lv_event_get_target(event), &area);
     int32_t center = area.x1 + LCD_WIDTH / 2;
     int32_t base_y = area.y1 + SCALE_BASE;
 
@@ -168,13 +182,11 @@ static void radio_lvgl_draw_scale(lv_event_t *event)
             continue;
         }
         int32_t x = center + dx;
+        lv_point_t p1 = {(lv_coord_t)x, (lv_coord_t)(base_y - (major ? 15 : (half ? 10 : 6)))};
+        lv_point_t p2 = {(lv_coord_t)x, (lv_coord_t)base_y};
         line.color = lv_color_hex(major ? 0xDCE6EAU : (half ? 0x8A9CA3U : 0x56676EU));
         line.opa = opa;
-        line.p1.x = x;
-        line.p2.x = x;
-        line.p1.y = base_y - (major ? 15 : (half ? 10 : 6));
-        line.p2.y = base_y;
-        lv_draw_line(layer, &line);
+        lv_draw_line(draw_ctx, &line, &p1, &p2);
 
         if (major)
         {
@@ -182,38 +194,34 @@ static void radio_lvgl_draw_scale(lv_event_t *event)
             bool current = freq == nearest_major;
             const lv_font_t *font = current ? &lv_font_montserrat_20 : &lv_font_montserrat_14;
             lv_draw_label_dsc_t label;
-            lv_area_t label_area = {x - 24, base_y + (current ? 3 : 5), x + 24, area.y2};
+            lv_area_t label_area = {(lv_coord_t)(x - 24), (lv_coord_t)(base_y + (current ? 3 : 5)),
+                                    (lv_coord_t)(x + 24), area.y2};
             (void)snprintf(text, sizeof(text), "%u", (unsigned int)(freq / 100));
             lv_draw_label_dsc_init(&label);
-            label.text = text;
-            label.text_local = 1;
             label.font = font;
             label.color = lv_color_hex(current ? COLOR_TEXT : COLOR_SECONDARY);
             label.opa = current ? LV_OPA_COVER : radio_lvgl_scale_opa(dx, 170);
             label.align = LV_TEXT_ALIGN_CENTER;
-            lv_draw_label(layer, &label, &label_area);
+            lv_draw_label(draw_ctx, &label, &label_area, text, NULL);
         }
     }
 
-    lv_draw_triangle_dsc_t pointer;
-    lv_draw_triangle_dsc_init(&pointer);
+    lv_draw_rect_dsc_t pointer;
+    lv_point_t points[3] = {
+        {(lv_coord_t)center, (lv_coord_t)(area.y1 + 1)},
+        {(lv_coord_t)(center - 3), (lv_coord_t)(base_y + 2)},
+        {(lv_coord_t)(center + 3), (lv_coord_t)(base_y + 2)},
+    };
+    lv_draw_rect_dsc_init(&pointer);
     pointer.bg_opa = LV_OPA_COVER;
     pointer.bg_color = lv_color_hex(COLOR_POINTER);
     pointer.bg_grad.dir = LV_GRAD_DIR_VER;
     pointer.bg_grad.stops_count = 2;
     pointer.bg_grad.stops[0].color = lv_color_hex(COLOR_POINTER);
-    pointer.bg_grad.stops[0].opa = LV_OPA_COVER;
     pointer.bg_grad.stops[0].frac = 0;
     pointer.bg_grad.stops[1].color = lv_color_hex(COLOR_POINTER_DARK);
-    pointer.bg_grad.stops[1].opa = LV_OPA_COVER;
     pointer.bg_grad.stops[1].frac = 255;
-    pointer.p[0].x = center;
-    pointer.p[0].y = area.y1 + 1;
-    pointer.p[1].x = center - 3;
-    pointer.p[1].y = base_y + 2;
-    pointer.p[2].x = center + 3;
-    pointer.p[2].y = base_y + 2;
-    lv_draw_triangle(layer, &pointer);
+    lv_draw_triangle(draw_ctx, &pointer, points);
 }
 
 /*
@@ -222,29 +230,25 @@ static void radio_lvgl_draw_scale(lv_event_t *event)
  */
 static void radio_lvgl_draw_glow(lv_event_t *event)
 {
-    lv_layer_t *layer = lv_event_get_layer(event);
+    lv_draw_ctx_t *draw_ctx = lv_event_get_draw_ctx(event);
+    lv_point_t center = {DIAL_CENTER_X, DIAL_CENTER_Y};
     lv_draw_arc_dsc_t arc;
     lv_draw_arc_dsc_init(&arc);
-    arc.center.x = DIAL_CENTER_X;
-    arc.center.y = DIAL_CENTER_Y;
     arc.color = lv_color_hex(COLOR_DIAL_GLOW);
     arc.width = DIAL_GLOW_STEP;
-    arc.start_angle = 0;
-    arc.end_angle = 360;
     for (int32_t r = DIAL_SIZE / 2 + DIAL_GLOW_STEP; r <= DIAL_GLOW_RADIUS; r += DIAL_GLOW_STEP)
     {
         int32_t left = DIAL_GLOW_RADIUS - r + DIAL_GLOW_STEP;
         int32_t span = DIAL_GLOW_RADIUS - DIAL_SIZE / 2;
-        arc.radius = (uint16_t)r;
         arc.opa = (lv_opa_t)(DIAL_GLOW_OPA * left * left / (span * span));
-        lv_draw_arc(layer, &arc);
+        lv_draw_arc(draw_ctx, &arc, &center, (uint16_t)r, 0, 360);
     }
 }
 
 static void radio_lvgl_set_text_color(lv_obj_t *label, uint32_t hex)
 {
     lv_color_t color = lv_color_hex(hex);
-    if (lv_color_to_u32(lv_obj_get_style_text_color(label, LV_PART_MAIN)) != lv_color_to_u32(color))
+    if (lv_color_to32(lv_obj_get_style_text_color(label, LV_PART_MAIN)) != lv_color_to32(color))
     {
         lv_obj_set_style_text_color(label, color, LV_PART_MAIN);
     }
@@ -442,19 +446,22 @@ bool radio_ui_init(void)
         return false;
     }
     lv_init();
-    lv_tick_set_cb(radio_lvgl_tick_ms);
-    s_display = lv_display_create(LCD_WIDTH, LCD_HEIGHT);
+    s_last_tick = (uint32_t)qosa_get_system_tick_cnt();
+    lv_disp_draw_buf_init(&s_draw_buf_dsc, s_draw_buf, NULL, LCD_WIDTH * LVGL_DRAW_ROWS);
+    lv_disp_drv_init(&s_disp_drv);
+    s_disp_drv.hor_res = LCD_WIDTH;
+    s_disp_drv.ver_res = LCD_HEIGHT;
+    s_disp_drv.flush_cb = radio_lvgl_flush;
+    s_disp_drv.draw_buf = &s_draw_buf_dsc;
+    s_disp_drv.antialiasing = 1;
+    s_display = lv_disp_drv_register(&s_disp_drv);
     if (s_display == NULL)
     {
         QLOGE("[radio_ui] LVGL display creation failed");
         return false;
     }
-    lv_display_set_color_format(s_display, LV_COLOR_FORMAT_RGB565);
-    lv_display_set_flush_cb(s_display, radio_lvgl_flush);
-    lv_display_set_buffers(s_display, s_draw_buf, NULL, sizeof(s_draw_buf), LV_DISPLAY_RENDER_MODE_PARTIAL);
-    lv_display_set_antialiasing(s_display, true);
 
-    screen = lv_screen_active();
+    screen = lv_disp_get_scr_act(s_display);
     lv_obj_set_style_bg_color(screen, lv_color_hex(COLOR_BG), LV_PART_MAIN);
     lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, LV_PART_MAIN);
     lv_obj_set_style_pad_all(screen, 0, LV_PART_MAIN);
@@ -466,8 +473,8 @@ bool radio_ui_init(void)
     }
 
     s_initialized = true;
-    QLOGI("[radio_ui] LVGL 9.2.2 display ready: %ux%u RGB565, partial buffer=%u bytes",
-          (unsigned int)LCD_WIDTH, (unsigned int)LCD_HEIGHT, (unsigned int)sizeof(s_draw_buf));
+    QLOGI("[radio_ui] LVGL %d.%d.%d display ready: %ux%u RGB565, partial buffer=%u bytes",
+          LVGL_VERSION_MAJOR, LVGL_VERSION_MINOR, LVGL_VERSION_PATCH, (unsigned int)LCD_WIDTH, (unsigned int)LCD_HEIGHT, (unsigned int)sizeof(s_draw_buf));
     lv_refr_now(s_display);
     lcd_set_backlight(UI_BACKLIGHT_PERCENT);
     QLOGI("[radio_ui] LVGL initial flushes=%u errors=%u",
@@ -490,6 +497,7 @@ void radio_ui_process(void)
 {
     if (s_initialized)
     {
+        radio_lvgl_tick_update();
         (void)lv_timer_handler();
     }
 }

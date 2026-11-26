@@ -31,11 +31,23 @@ target_include_directories(${target} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/main/radio_ui
     ${CMAKE_CURRENT_SOURCE_DIR}/main/radio_ui/lcd
     ${CMAKE_CURRENT_SOURCE_DIR}/main/si4731/i2c
-    ${CMAKE_CURRENT_SOURCE_DIR}/components
-    ${CMAKE_CURRENT_SOURCE_DIR}/components/lvgl
 )
 
-target_compile_definitions(${target} PRIVATE LV_CONF_INCLUDE_SIMPLE)
+# LVGL comes from the official unirtos-lvgl library declared in env_config.json.
+# `unirtos-cli env-setup` downloads it and the SDK builds it before this app.
+if(NOT TARGET unirtos-lvgl)
+    message(FATAL_ERROR "unirtos-lvgl library not found. Run `unirtos-cli env-setup` before building.")
+endif()
+
+# The official lv_conf.h only enables Montserrat 14/16. The dashboard also needs
+# 20/24/28, so build those font files here without changing the library.
+get_target_property(LVGL_LIB_DIR unirtos-lvgl SOURCE_DIR)
+set(LVGL_FONT_DIR ${LVGL_LIB_DIR}/lvgl-v8.3.11/src/font)
+target_compile_definitions(${target} PRIVATE
+    LV_FONT_MONTSERRAT_20=1
+    LV_FONT_MONTSERRAT_24=1
+    LV_FONT_MONTSERRAT_28=1
+)
 
 # Add your source files here.
 file(GLOB_RECURSE APP_SRC
@@ -43,10 +55,13 @@ file(GLOB_RECURSE APP_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/main/si4731/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/main/ec11/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/main/radio_ui/*.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/main/si4731/i2c/*.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/components/lvgl/src/*.c)
+    ${CMAKE_CURRENT_SOURCE_DIR}/main/si4731/i2c/*.c)
 
-target_sources(${target} PRIVATE ${APP_SRC})
+target_sources(${target} PRIVATE ${APP_SRC}
+    ${LVGL_FONT_DIR}/lv_font_montserrat_20.c
+    ${LVGL_FONT_DIR}/lv_font_montserrat_24.c
+    ${LVGL_FONT_DIR}/lv_font_montserrat_28.c
+)
 
 # Automatically link external libraries declared in env_config.json.
 # This lets app sources include library headers and use library APIs directly.

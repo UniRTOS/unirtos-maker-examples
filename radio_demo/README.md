@@ -92,6 +92,7 @@ The 5 V supply above applies to the LCD module shown; check the supply and signa
 ### Software Requirements
 
 - UniRTOS SDK 1.0.5 and the `EG800ZCN_LA` module configuration, as specified in `env_config.json`
+- The official [unirtos-lvgl](https://github.com/UniRTOS/unirtos-lvgl) library v1.0.0 (LVGL 8.3.11), declared in `env_config.json` and downloaded by `unirtos-cli env-setup`
 - UniRTOS command-line build environment and a supported firmware flashing tool
 - EPAT or another supported device log viewer
 
@@ -105,9 +106,6 @@ Follow the [UniRTOS Quick Start](https://docs.quectel.com/zh/UniRTOS/UniRTOS%E6%
 
 ```text
 radio_demo/
-├── components/
-│   ├── lv_conf.h               # LVGL configuration
-│   └── lvgl/                   # LVGL 9.2.2 source
 ├── main/
 │   ├── ec11/                   # Encoder and button driver
 │   ├── inc/                    # Application and event interfaces
@@ -123,7 +121,7 @@ radio_demo/
 ├── media/                      # LCD photos
 ├── menuconfig/                 # Application configuration
 ├── CMakeLists.txt              # External-app target and source collection
-├── env_config.json             # UniRTOS SDK and module configuration
+├── env_config.json             # UniRTOS SDK, module and library configuration
 ├── README.md                   # English documentation
 └── README_ZH.md                # Chinese documentation
 ```
@@ -135,6 +133,8 @@ From the project directory, prepare the build environment:
 ```powershell
 unirtos-cli env-setup
 ```
+
+This also downloads the LVGL library declared in `env_config.json` to `~/.unirtos/libraries/unirtos-lvgl/v1.0.0/`. LVGL source is not included in this repository. `env_config.json` sets `libraries.manifest_repo_url` to the GitHub manifest because the Gitee mirror does not list `unirtos-lvgl` yet.
 
 Build the firmware for the default module. If the locally installed firmware version differs, replace the version number:
 
@@ -155,8 +155,8 @@ Example log messages are shown below; station and signal values vary by location
 [ec11] EC11 ready: A pin=20 gpio=27, B pin=21 gpio=17, C pin=19, idle AB=11 (expect 11)
 [lcd] LCD gpio: cs=12 dc=9 rst=8
 [lcd] LCD ready: ST7789 320x240 on SPI1
-[radio_ui] LVGL 9.2.2 display ready: 320x240 RGB565, partial buffer=20480 bytes
-[radio_ui] LVGL first flush: x=0 y=0 w=320 h=32 format=18
+[radio_ui] LVGL 8.3.11 display ready: 320x240 RGB565, partial buffer=20480 bytes
+[radio_ui] LVGL first flush: x=0 y=0 w=320 h=32
 [radio_ui] LVGL initial flushes=8 errors=0
 [i2c] Software I2C ready: SCL pin=28 gpio=10 SDA pin=29 gpio=11
 [i2c] SDA pull before toggle: 2 (UP=2)
@@ -233,12 +233,12 @@ Frequencies in the code use **10 kHz** units: `10360`, for example, means 103.60
 - A/B transitions invoke `ec11_rotate_isr()`, which decodes direction from the previous and current pin levels, puts valid rotation events in a ring buffer and wakes the EC11 task. The button interrupt only flags an edge and wakes the task; it does not operate the radio or display.
 - `ec11_task_start()` waits on the semaphore and consumes rotation events. It debounces the button and reports only a confirmed press. The task passes events to the application through a callback, and the application posts them to the message queue.
 
-**Display ([`main/radio_ui/radio_ui.c`](main/radio_ui/radio_ui.c), [`main/radio_ui/lcd/`](main/radio_ui/lcd/), [`components/lvgl/`](components/lvgl/))**
+**Display ([`main/radio_ui/radio_ui.c`](main/radio_ui/radio_ui.c), [`main/radio_ui/lcd/`](main/radio_ui/lcd/), [unirtos-lvgl](https://github.com/UniRTOS/unirtos-lvgl))**
 
 - `radio_ui_init()` initializes the LCD and LVGL, creates the dashboard and configures the draw buffer. It enables the backlight after the first frame is flushed to reduce random pixels at startup.
 - The radio task calls `radio_ui_update()`; `radio_lvgl_update_dashboard()` updates the frequency, volume, status text, signal bars and colors from `radio_ui_state_t`. The bars represent RSSI; after changing stations, mono/stereo status waits for the next RSQ poll.
 - `radio_ui_process()` runs the LVGL timer handler. When LVGL needs to flush an area, `radio_lvgl_flush()` calls `lcd_draw()`. The LCD driver sets the drawing window and sends RGB565 pixels over SPI.
-- For layout changes, start with `radio_lvgl_make_dashboard()`; for displayed values and mode colors, see `radio_lvgl_update_dashboard()`. `radio_lvgl_draw_scale()` and `radio_lvgl_draw_glow()` draw the ruler and glow. LVGL uses a 32 KiB heap and a 320 × 32-pixel partial draw buffer; check available memory when adding fonts or effects. Configuration is in [`components/lv_conf.h`](components/lv_conf.h).
+- For layout changes, start with `radio_lvgl_make_dashboard()`; for displayed values and mode colors, see `radio_lvgl_update_dashboard()`. `radio_lvgl_draw_scale()` and `radio_lvgl_draw_glow()` draw the ruler and glow. LVGL uses a 48 KiB heap and a 320 × 32-pixel partial draw buffer; check available memory when adding fonts or effects. The official configuration only enables Montserrat 14/16, so the app's `CMakeLists.txt` compiles Montserrat 20/24/28 itself. Configuration is in the library's `include/lv_conf.h`.
 
 **Example: tuning the radio**
 
