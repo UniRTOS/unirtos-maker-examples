@@ -128,7 +128,35 @@ e-Paper busy release
 
 ### 应用流程
 
-![温湿度 Demo 与 UART Demo 任务协作流程图](media/humiture-workflow.png)
+```mermaid
+flowchart TD
+    app["UniRTOS 应用注册表"] --> humiture_init["温湿度 Demo 初始化"]
+    app --> uart_init["UART Demo 初始化"]
+    humiture_init --> sync["创建互斥锁和显示信号量"]
+    sync --> sensor_task["创建传感器任务"]
+    sync --> display_task["创建显示任务"]
+
+    sensor_task --> sample["AHT20 软件 I2C 采样"]
+    sample --> sample_ok{"采样成功？"}
+    sample_ok -->|是| update["加锁更新温湿度"]
+    sample_ok -->|否| delay["等待下一次采样"]
+    update --> sensor_signal["释放显示信号量"]
+    sensor_signal --> delay
+    delay --> sample
+
+    uart_init --> uart_rx["UART 接收回调"]
+    uart_rx --> parse["解析并筛选有效文本行"]
+    parse --> queue["文本进入显示队列"]
+    queue --> uart_signal["释放显示信号量"]
+
+    display_task --> display_init["初始化电子纸"]
+    display_init --> wait["等待显示信号量"]
+    sensor_signal -. 通知 .-> wait
+    uart_signal -. 通知 .-> wait
+    wait --> read["读取最新温湿度及一条待显示文本（如有）"]
+    read --> refresh["绘制画布并刷新：首次全屏，后续局部"]
+    refresh --> wait
+```
 
 ### 主要模块
 
