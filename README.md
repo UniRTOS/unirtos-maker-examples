@@ -50,6 +50,7 @@ The basic examples target the EG800Z-CN module. Application demos have specific 
 - [Large Screen Gateway](large_screen/README.md): Use LVGL to build touch interfaces for agriculture, industry, and smart home scenarios. Requires an ST7796S LCD and an FT6336 capacitive touch component.
 - [E-Ink Humidity and Temperature Monitor](e-ink_humiture_demo/README.md): Displays periodically updated humidity and temperature information on an e-ink display, with support for configuring the e-ink label via serial port.
 - [Intelligent RC Car](intelligent_rc_car/README.md): Remotely control an Arduino UNO obstacle-avoidance car through Alibaba Cloud MQTT and a browser page. Requires an available SIM card and an Arduino UNO car.
+- [Radio Demo](radio_demo/README.md)：Build an FM radio using the SI4731 radio module, EC11 rotary encoder, and ST7789 LCD.
 
 ## Community & Support
 

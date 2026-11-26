@@ -124,7 +124,35 @@ e-Paper busy release
 
 ### Application Workflow
 
-![Temperature/humidity demo and UART task workflow](media/humiture-workflow.png)
+```mermaid
+flowchart TD
+    app["UniRTOS application registry"] --> humiture_init["Initialize temperature/humidity demo"]
+    app --> uart_init["Initialize UART demo"]
+    humiture_init --> sync["Create mutex and display semaphore"]
+    sync --> sensor_task["Create sensor task"]
+    sync --> display_task["Create display task"]
+
+    sensor_task --> sample["Sample AHT20 via software I2C"]
+    sample --> sample_ok{"Sample successful?"}
+    sample_ok -->|Yes| update["Update temperature and humidity under mutex"]
+    sample_ok -->|No| delay["Wait for next sampling interval"]
+    update --> sensor_signal["Release display semaphore"]
+    sensor_signal --> delay
+    delay --> sample
+
+    uart_init --> uart_rx["UART receive callback"]
+    uart_rx --> parse["Parse and filter valid text lines"]
+    parse --> queue["Enqueue text for display"]
+    queue --> uart_signal["Release display semaphore"]
+
+    display_task --> display_init["Initialize e-paper display"]
+    display_init --> wait["Wait for display semaphore"]
+    sensor_signal -. Notify .-> wait
+    uart_signal -. Notify .-> wait
+    wait --> read["Read latest temperature/humidity and one queued line, if available"]
+    read --> refresh["Draw and refresh: full screen initially, then partial updates"]
+    refresh --> wait
+```
 
 ### Main Modules
 
